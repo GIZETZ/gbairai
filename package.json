@@ -4,13 +4,13 @@
   "type": "module",
   "license": "MIT",
   "scripts": {
-    "dev": "NODE_ENV=development tsx server/index.ts",
+    "build": "cd client && npm run build",
     "build:render": "npm install && cd client && npm install && npm run build",
+    "dev": "NODE_ENV=development tsx server/index.ts",
+    "start": "NODE_ENV=production tsx server/index.ts",
     "start:render": "NODE_ENV=production tsx server/index.ts",
-    "build": "cd client && npm install && npm run build",
-    "start": "NODE_ENV=production node dist/server/index.js",
-    "db:push": "drizzle-kit push",
-    "db:generate": "drizzle-kit generate"
+    "db:push": "tsx -e \"import('./server/db.js').then(m => m.migrate())\"",
+    "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

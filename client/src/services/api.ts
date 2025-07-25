@@ -182,3 +182,7 @@ export const healthApi = {
     return response.json();
   }
 };
+const API_BASE_URL = import.meta.env.VITE_API_URL || 
+  (typeof window !== 'undefined' && window.location.origin.includes('pages.dev') 
+    ? 'https://votre-backend-replit.replit.app' 
+    : 'http://localhost:5000');

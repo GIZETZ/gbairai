@@ -4,9 +4,9 @@
   "type": "module",
   "license": "MIT",
   "scripts": {
-    "build": "cd client && npm run build",
-    "build:render": "npm install && cd client && npm install && npm run build",
     "dev": "NODE_ENV=development tsx server/index.ts",
+    "build": "cd client && npm run build",
+    "build:cloudflare": "node build-cloudflare.js",
     "start": "NODE_ENV=production tsx server/index.ts",
     "start:render": "NODE_ENV=production tsx server/index.ts",
     "db:push": "tsx -e \"import('./server/db.js').then(m => m.migrate())\"",

@@ -78,8 +78,8 @@ app.use((req, res, next) => {
   const port = parseInt(process.env.PORT || '5000', 10);
   const host = "0.0.0.0";
   
-  // Force production mode if PORT is set (deployment environment)
-  if (process.env.PORT && process.env.PORT !== '5000') {
+  // Force production mode for deployment
+  if (process.env.NODE_ENV === 'production' || process.env.PORT) {
     process.env.NODE_ENV = 'production';
     app.set('env', 'production');
   }

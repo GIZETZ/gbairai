@@ -78,6 +78,12 @@ app.use((req, res, next) => {
   const port = parseInt(process.env.PORT || '5000', 10);
   const host = "0.0.0.0";
   
+  // Force production mode if PORT is set (deployment environment)
+  if (process.env.PORT && process.env.PORT !== '5000') {
+    process.env.NODE_ENV = 'production';
+    app.set('env', 'production');
+  }
+  
   server.listen(port, host, () => {
     log(`🚀 Server running on ${host}:${port}`);
     log(`🌐 API available at http://${host}:${port}/api`);

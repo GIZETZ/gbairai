@@ -5,7 +5,7 @@
   "license": "MIT",
   "scripts": {
     "dev": "NODE_ENV=development tsx server/index.ts",
-    "build": "cd client && npm run build",
+    "build": "cd client && npx vite build",
     "build:cloudflare": "node build-cloudflare.js",
     "start": "NODE_ENV=production node --loader tsx/esm server/index.ts",
     "start:render": "NODE_ENV=production tsx server/index.ts",

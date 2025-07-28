@@ -5,7 +5,7 @@ import { GbairaiFilters } from "@/components/Common/GbairaiFilters";
 import { useGbairais, useGbairaiComments } from "@/hooks/useGbairais";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { Plus, MessageSquare, Heart, User, Bell, LogIn, UserPlus } from "lucide-react";
+import { Plus, MessageSquare, Heart, User, Bell, LogIn, UserPlus, X } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -47,6 +47,15 @@ export default function MobileHomePage() {
   const [isDragging, setIsDragging] = useState(false);
   const [dragPosition, setDragPosition] = useState({ x: 16, y: typeof window !== 'undefined' ? window.innerHeight * 0.85 : 600 });
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [showWelcomeBanner, setShowWelcomeBanner] = useState(() => {
+    // Vérifier si le banner a été masqué précédemment
+    try {
+      const hidden = localStorage.getItem('welcome-banner-hidden');
+      return hidden !== 'true';
+    } catch {
+      return true;
+    }
+  });
 
   // Hooks personnalisés
   const [location, setLocation] = useLocation();
@@ -86,6 +95,16 @@ export default function MobileHomePage() {
       localStorage.setItem('gbairai-filters', JSON.stringify(newFilters));
     } catch (error) {
       console.error('Erreur lors de la sauvegarde des filtres:', error);
+    }
+  };
+
+  // Fonction pour masquer le banner de bienvenue
+  const handleHideWelcomeBanner = () => {
+    setShowWelcomeBanner(false);
+    try {
+      localStorage.setItem('welcome-banner-hidden', 'true');
+    } catch (error) {
+      console.error('Erreur lors de la sauvegarde:', error);
     }
   };
 
@@ -266,13 +285,21 @@ export default function MobileHomePage() {
         paddingTop: '10vh'
       }}>
         {/* Banner pour les visiteurs non connectés */}
-        {!user && (
+        {!user && showWelcomeBanner && (
           <div className="fixed left-0 right-0 z-50 pt-20 md:pt-8 px-6 md:px-12" style={{ top: '0%', background: 'transparent' }}>
             <div className="flex justify-end items-start mb-4">
             </div>
             <div className="space-y-6">
               <div className="space-y-6">
-                <Card className="border-2 border-blue-200 bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20">
+                <Card className="border-2 border-blue-200 bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 relative">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleHideWelcomeBanner}
+                    className="absolute top-2 right-2 h-6 w-6 p-0 text-blue-600 hover:text-blue-800 hover:bg-blue-200/50"
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
                   <CardContent className="p-4 text-center">
                     <h2 className="text-lg font-semibold text-blue-800 dark:text-blue-200 mb-2">
                       🎉 Bienvenue sur Gbairai !
@@ -303,7 +330,7 @@ export default function MobileHomePage() {
         )}
 
         {/* Filters */}
-        <div className="fixed left-0 right-0 z-50 pt-20 md:pt-8 px-6 md:px-12" style={{ top: (!user ? '15%' : '-30%'), background: 'transparent' }}>
+        <div className="fixed left-0 right-0 z-50 pt-20 md:pt-8 px-6 md:px-12" style={{ top: (!user && showWelcomeBanner ? '15%' : '-30%'), background: 'transparent' }}>
           <div className="flex justify-end items-start mb-4">
             <div className="flex space-x-2">
               {user ? (

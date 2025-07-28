@@ -1,6 +1,6 @@
 
-const https = require('https');
-const { URL } = require('url');
+import https from 'https';
+import { URL } from 'url';
 
 console.log('🚀 Démarrage du script de réinitialisation admin...');
 

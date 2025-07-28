@@ -1,5 +1,5 @@
 
-import https from 'https';
+import http from 'http';
 import { URL } from 'url';
 
 console.log('🚀 Démarrage du script de réinitialisation admin...');
@@ -18,22 +18,14 @@ if (!replOwner) {
   process.exit(1);
 }
 
-const urlString = `https://workspace.${replOwner}.repl.co/api/admin/reset-password`;
-console.log(`🌐 URL cible: ${urlString}`);
-
-let parsedUrl;
-try {
-  parsedUrl = new URL(urlString);
-  console.log('✅ URL parsée avec succès');
-} catch (error) {
-  console.error('❌ Erreur parsing URL:', error.message);
-  process.exit(1);
-}
+// Faire une requête locale directement
+const localUrl = 'http://localhost:10000/api/admin/reset-password';
+console.log(`🌐 URL cible: ${localUrl} (requête locale)`);
 
 const options = {
-  hostname: parsedUrl.hostname,
-  port: parsedUrl.port || 443,
-  path: parsedUrl.pathname,
+  hostname: 'localhost',
+  port: 10000,
+  path: '/api/admin/reset-password',
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
@@ -52,7 +44,7 @@ console.log('📋 Options de requête:', {
 
 console.log('📤 Envoi de la requête...');
 
-const req = https.request(options, (res) => {
+const req = http.request(options, (res) => {
   console.log(`📊 Status: ${res.statusCode}`);
   console.log(`📋 Headers:`, res.headers);
   

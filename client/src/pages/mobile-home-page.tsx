@@ -15,14 +15,12 @@ import { useAuth } from "@/hooks/use-auth";
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { InteractiveMap } from "@/components/Map/InteractiveMap";
+import { GbairaiForm } from "@/components/Gbairai/GbairaiForm";
 
 export default function MobileHomePage() {
-  console.log('MobileHomePage: Composant chargé');
-  
   const { user, isLoading: authLoading } = useAuth();
   const [showAuthDialog, setShowAuthDialog] = useState(false);
-  
-  console.log('MobileHomePage: user =', user, 'authLoading =', authLoading);
 
   // Charger les filtres depuis localStorage au démarrage
   const loadFiltersFromStorage = () => {

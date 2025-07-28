@@ -11,6 +11,7 @@ interface GbairaiFiltersProps {
   currentFilters: any;
   isGuest?: boolean;
   onAuthRequired?: () => void;
+  hideWhenCommentsOpen?: boolean;
 }
 
 // Régions de Côte d'Ivoire
@@ -45,7 +46,8 @@ export function GbairaiFilters({
   onFilterChange, 
   currentFilters,
   isGuest = false,
-  onAuthRequired
+  onAuthRequired,
+  hideWhenCommentsOpen = false
 }: GbairaiFiltersProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 

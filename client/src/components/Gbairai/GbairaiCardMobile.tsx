@@ -161,31 +161,8 @@ export function GbairaiCardMobile({
       return;
     }
 
-    // Pour les commentaires, rediriger vers la page dédiée
-    if (type === 'comment') {
-      window.location.href = `/comments/${gbairai.id}`;
-      return;
-    }
-
-    // Pour le partage, ne pas traiter ici - géré par le menu de partage
-    if (type === 'share') {
-      return;
-    }
-
-    try {
-      await interactMutation.mutateAsync({
-        gbairaiId: gbairai.id,
-        type: type as 'like' | 'comment' | 'share',
-        content: undefined,
-      });
-    } catch (error) {
-      console.error('Erreur lors de l\'interaction:', error);
-      toast({
-        title: "Erreur",
-        description: "Impossible d'interagir pour le moment.",
-        variant: "destructive",
-      });
-    }
+    // Rediriger vers la page des commentaires pour toutes les interactions
+    window.location.href = `/comments/${gbairai.id}`;
   };
 
   const handleCommentSubmit = async () => {
@@ -1052,23 +1029,13 @@ export function GbairaiCardMobile({
                 <span>{gbairai.interactions.filter(i => i.type === 'comment').length}</span>
               </button>
               
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button className="action-btn">
-                    <Share2 className="w-4 h-4" />
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  <DropdownMenuItem onClick={handleExternalShare}>
-                    <Share2 className="w-4 h-4 mr-2" />
-                    Partager
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleReportGbairai}>
-                    <Flag className="w-4 h-4 mr-2" />
-                    Signaler
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <button 
+                className="action-btn"
+                onClick={() => handleInteraction('share')}
+                disabled={interactMutation.isPending}
+              >
+                <Share2 className="w-4 h-4" />
+              </button>
             </div>
           </div>
         </div>

@@ -213,7 +213,9 @@ export class DatabaseStorage implements IStorage {
   // Mettre à jour le mot de passe d'un utilisateur
   async updateUserPassword(email: string, newPassword: string): Promise<boolean> {
     try {
-      const hashedPassword = await bcrypt.hash(newPassword, 10);
+      // Utiliser le même système de hashage que le reste de l'app (scrypt)
+      const { hashPassword } = require('./auth');
+      const hashedPassword = await hashPassword(newPassword);
 
       const [updated] = await db
         .update(users)

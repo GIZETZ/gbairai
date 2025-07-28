@@ -1891,6 +1891,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Route temporaire pour réinitialiser le mot de passe admin
+  app.post("/api/admin/reset-password", async (req, res) => {
+    try {
+      const { newPassword, adminKey } = req.body;
+      
+      // Clé de sécurité temporaire - à supprimer après utilisation
+      if (adminKey !== 'RESET_ADMIN_2025') {
+        return res.status(403).json({ error: "Clé non autorisée" });
+      }
+
+      if (!newPassword || newPassword.length < 6) {
+        return res.status(400).json({ error: "Mot de passe requis (min 6 caractères)" });
+      }
+
+      // Hasher le nouveau mot de passe correctement avec scrypt
+      const { hashPassword } = require('./auth');
+      const hashedPassword = await hashPassword(newPassword);
+      
+      // Mettre à jour le mot de passe de l'admin directement en base
+      const result = await db
+        .update(users)
+        .set({ password: hashedPassword })
+        .where(eq(users.email, 'gbairai.app@gmail.com'))
+        .returning();
+      
+      if (!result.length) {
+        return res.status(404).json({ error: "Utilisateur admin non trouvé" });
+      }
+
+      console.log('✅ Mot de passe admin réinitialisé avec succès');
+      res.json({ message: "Mot de passe admin réinitialisé avec succès" });
+    } catch (error) {
+      console.error('Erreur réinitialisation mot de passe admin:', error);
+      res.status(500).json({ error: "Erreur lors de la réinitialisation" });
+    }
+  });
+
   // Route pour confirmer la réinitialisation avec le nouveau mot de passe
   app.post("/api/password/reset-confirm", async (req, res) => {
     try {
@@ -1904,10 +1941,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Le mot de passe doit contenir au moins 6 caractères" });
       }
 
-      // Mettre à jour le mot de passe de l'utilisateur
-      const success = await storage.updateUserPassword(email, newPassword);
+      // Utiliser le bon système de hashage (scrypt)
+      const { hashPassword } = require('./auth');
+      const hashedPassword = await hashPassword(newPassword);
       
-      if (!success) {
+      // Mettre à jour le mot de passe de l'utilisateur
+      const [updated] = await db
+        .update(users)
+        .set({ password: hashedPassword })
+        .where(eq(users.email, email))
+        .returning();
+      
+      if (!updated) {
         return res.status(404).json({ error: "Utilisateur non trouvé" });
       }
 

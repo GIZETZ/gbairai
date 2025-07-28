@@ -77,16 +77,23 @@ app.use((req, res, next) => {
   const port = parseInt(process.env.PORT || '10000', 10);
   const host = "0.0.0.0";
   
-  // Set production mode for deployment
-  if (process.env.NODE_ENV === 'production') {
+  // Force production mode detection
+  const isProduction = process.env.NODE_ENV === 'production' || process.env.REPL_SLUG;
+  if (isProduction) {
     app.set('env', 'production');
+    console.log('🚀 Running in PRODUCTION mode');
+  } else {
+    console.log('🚀 Running in DEVELOPMENT mode');
   }
   
   server.listen(port, host, () => {
     log(`🚀 Server running on ${host}:${port}`);
     log(`🌐 API available at http://${host}:${port}/api`);
+    log(`📁 Environment: ${app.get("env")}`);
     if (app.get("env") === "development") {
       log(`⚡ Vite dev server integrated`);
+    } else {
+      log(`📦 Serving static files in production`);
     }
   });
 })();

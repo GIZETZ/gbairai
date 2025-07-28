@@ -68,36 +68,26 @@ export async function setupVite(app: Express, server: Server) {
 }
 
 export function serveStatic(app: Express) {
-  const distPath = path.resolve(import.meta.dirname, "public");
+  // Essayer d'abord le dossier client/dist
+  const clientDistPath = path.resolve(__dirname, "..", "client", "dist");
+  const distPath = path.resolve(__dirname, "..", "dist");
 
-  if (!fs.existsSync(distPath)) {
-    console.warn(`Build directory not found: ${distPath}, creating it...`);
-    fs.mkdirSync(distPath, { recursive: true });
-    
-    // Create a simple index.html if none exists
-    const fallbackHtml = `<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gbairai - En cours de déploiement</title>
-</head>
-<body>
-    <div style="display: flex; justify-content: center; align-items: center; height: 100vh; font-family: Arial;">
-        <div style="text-align: center;">
-            <h1>🚀 Gbairai en cours de déploiement</h1>
-            <p>L'application sera bientôt disponible...</p>
-        </div>
-    </div>
-</body>
-</html>`;
-    fs.writeFileSync(path.resolve(distPath, "index.html"), fallbackHtml);
+  let staticPath = clientDistPath;
+
+  // Si client/dist n'existe pas, essayer dist à la racine
+  if (!fs.existsSync(clientDistPath)) {
+    if (fs.existsSync(distPath)) {
+      staticPath = distPath;
+    } else {
+      throw new Error(
+        `Could not find the build directory. Tried: ${clientDistPath} and ${distPath}.\nPlease build the client first.`
+      );
+    }
   }
 
-  app.use(express.static(distPath));
-
-  // fall through to index.html if the file doesn't exist
-  app.use("*", (_req, res) => {
-    res.sendFile(path.resolve(distPath, "index.html"));
+  console.log(`Serving static files from: ${staticPath}`);
+  app.use(express.static(staticPath));
+  app.get("*", (_req, res) => {
+    res.sendFile(path.resolve(staticPath, "index.html"));
   });
 }

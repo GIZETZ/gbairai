@@ -16,7 +16,7 @@ import { healthCheck } from './health';
 import { EmailValidationService } from "./services/emailValidation";
 import { emailService } from "./services/emailService";
 import { db, pool } from "./db";
-import { gbairais } from "@shared/schema";
+import { gbairais, users } from "@shared/schema";
 import { eq } from "drizzle-orm";
 import { sql } from "drizzle-orm";
 
@@ -1925,6 +1925,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Erreur confirmation réinitialisation:', error);
       res.status(500).json({ error: "Erreur lors de la modification du mot de passe" });
+    }
+  });
+
+  // Route temporaire pour réinitialiser le mot de passe admin (URGENCE)
+  app.post("/api/admin/reset-password", async (req, res) => {
+    try {
+      const { newPassword, adminKey } = req.body;
+
+      // Vérifier la clé d'urgence
+      if (adminKey !== "RESET_ADMIN_2025") {
+        return res.status(403).json({ error: "Clé d'administration invalide" });
+      }
+
+      if (!newPassword || newPassword.length < 6) {
+        return res.status(400).json({ error: "Nouveau mot de passe requis (min 6 caractères)" });
+      }
+
+      // Utiliser le système de hashage existant
+      const { hashPassword } = require('./auth');
+      const hashedPassword = await hashPassword(newPassword);
+      
+      // Mettre à jour le mot de passe de l'admin
+      const [updated] = await db
+        .update(users)
+        .set({ password: hashedPassword })
+        .where(eq(users.email, 'gbairai.app@gmail.com'))
+        .returning();
+      
+      if (!updated) {
+        return res.status(404).json({ error: "Administrateur non trouvé" });
+      }
+
+      console.log('✅ Mot de passe admin réinitialisé avec succès');
+      res.json({ 
+        success: true, 
+        message: "Mot de passe administrateur réinitialisé avec succès",
+        email: updated.email,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('❌ Erreur réinitialisation admin:', error);
+      res.status(500).json({ error: "Erreur lors de la réinitialisation" });
     }
   });
 

@@ -693,12 +693,27 @@ body {
 
   /* Force hide mobile navigation when comments are open */
   .comments-overlay ~ .mobile-nav-hide-on-keyboard,
-  .comment-form-overlay ~ .mobile-nav-hide-on-keyboard {
+  .comment-form-overlay ~ .mobile-nav-hide-on-keyboard,
+  .comments-card ~ .mobile-nav-hide-on-keyboard {
     display: none !important;
     visibility: hidden !important;
     opacity: 0 !important;
     transform: translateY(100%) !important;
     pointer-events: none !important;
+    z-index: -1 !important;
+  }
+
+  /* Global override when comments are active */
+  body:has(.comments-overlay) .mobile-nav-hide-on-keyboard,
+  body:has(.comment-form-overlay) .mobile-nav-hide-on-keyboard,
+  body:has(.comments-card) .mobile-nav-hide-on-keyboard,
+  body.comments-active .mobile-nav-hide-on-keyboard {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    transform: translateY(100%) !important;
+    pointer-events: none !important;
+    z-index: -1 !important;
   }
 
   /* Additional safety for mobile keyboard scenarios */

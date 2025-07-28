@@ -78,6 +78,15 @@ export function MobileNavigation({ hideWhenCommentsOpen }: MobileNavigationProps
     return null;
   }
 
+  // Vérifier si les commentaires sont ouverts en regardant les éléments DOM
+  const commentsOpen = document.querySelector('.comments-overlay') || 
+                      document.querySelector('.comment-form-overlay') ||
+                      document.querySelector('.comments-card');
+  
+  if (commentsOpen) {
+    return null;
+  }
+
   const navItems = [
     { 
       href: "/", 

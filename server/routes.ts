@@ -2172,6 +2172,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
+  // Route 404 pour les API non trouvées
+  app.use('/api/*', (req, res) => {
+    console.log(`❌ API route not found: ${req.method} ${req.path}`);
+    res.status(404).json({
+      error: 'API endpoint not found',
+      path: req.path,
+      method: req.method,
+      timestamp: new Date().toISOString()
+    });
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

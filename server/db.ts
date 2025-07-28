@@ -60,10 +60,19 @@ export const pool = new Pool({
 // Gestion des erreurs de connexion
 pool.on('error', (err) => {
   console.error('❌ Database pool error:', err);
+  // Ne pas crash le serveur en cas d'erreur de DB
 });
 
 pool.on('connect', () => {
   console.log('✅ Database pool connected');
+});
+
+// Test de connexion au démarrage
+pool.query('SELECT 1').then(() => {
+  console.log('✅ Database connection verified');
+}).catch((err) => {
+  console.error('❌ Database connection failed:', err);
+  console.error('🔧 Check your DATABASE_URL environment variable');
 });
 
 export const db = drizzle({ client: pool, schema: { 

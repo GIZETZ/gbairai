@@ -65,15 +65,26 @@ app.use((req, res, next) => {
       stack: err.stack,
       url: _req.url,
       method: _req.method,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      headers: _req.headers,
+      body: _req.body
     });
 
-    // Réponse sécurisée
-    res.status(status).json({ 
-      error: message,
-      timestamp: new Date().toISOString(),
-      ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
-    });
+    // Réponse sécurisée selon l'environnement
+    if (process.env.NODE_ENV === 'production') {
+      res.status(status).json({ 
+        error: status === 500 ? "Erreur interne du serveur" : message,
+        timestamp: new Date().toISOString()
+      });
+    } else {
+      res.status(status).json({ 
+        error: message,
+        timestamp: new Date().toISOString(),
+        stack: err.stack,
+        url: _req.url,
+        method: _req.method
+      });
+    }
   });
 
   // importantly only setup vite in development and after
@@ -92,10 +103,19 @@ app.use((req, res, next) => {
   const host = "0.0.0.0";
   
   // Force production mode detection
-  const isProduction = process.env.NODE_ENV === 'production' || process.env.REPL_SLUG;
+  const isProduction = process.env.NODE_ENV === 'production' || process.env.REPL_SLUG || process.env.REPLIT_DEPLOYMENT;
+  
   if (isProduction) {
     app.set('env', 'production');
+    process.env.NODE_ENV = 'production';
     console.log('🚀 Running in PRODUCTION mode');
+    console.log('🌍 Environment variables:', {
+      NODE_ENV: process.env.NODE_ENV,
+      REPL_SLUG: process.env.REPL_SLUG,
+      REPLIT_DEPLOYMENT: process.env.REPLIT_DEPLOYMENT,
+      PORT: process.env.PORT,
+      DATABASE_URL: process.env.DATABASE_URL ? 'configured' : 'missing'
+    });
   } else {
     console.log('🚀 Running in DEVELOPMENT mode');
   }

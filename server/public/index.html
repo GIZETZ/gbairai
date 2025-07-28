@@ -45,6 +45,11 @@
   <body>
     <div id="root"></div>
     
+    <!-- Bouton d'installation PWA -->
+    <button id="install-button" onclick="installApp()" style="display: none; position: fixed; bottom: 20px; right: 20px; background-color: #F7C948; color: #1D3557; padding: 12px 20px; border: none; border-radius: 10px; font-weight: bold; z-index: 999; box-shadow: 0 4px 12px rgba(0,0,0,0.15); cursor: pointer; font-family: system-ui, -apple-system, sans-serif;">
+      📲 Installer Gbairai
+    </button>
+    
     <script>
       let deferredPrompt;
       window.addEventListener('beforeinstallprompt', (e) => {

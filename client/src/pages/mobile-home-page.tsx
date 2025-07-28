@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Plus, MessageSquare, Heart, User, Bell, LogIn, UserPlus } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { notificationsApi } from "@/services/api";
 import { useAuth } from "@/hooks/use-auth";
@@ -75,6 +76,17 @@ export default function MobileHomePage() {
   // Fonction pour gérer les actions nécessitant une authentification
   const handleAuthRequired = () => {
     setShowAuthDialog(true);
+  };
+
+  // Fonction pour gérer les changements de filtres
+  const handleFilterChange = (newFilters: typeof filters) => {
+    setFilters(newFilters);
+    // Sauvegarder les filtres dans localStorage
+    try {
+      localStorage.setItem('gbairai-filters', JSON.stringify(newFilters));
+    } catch (error) {
+      console.error('Erreur lors de la sauvegarde des filtres:', error);
+    }
   };
 
   // Tous les useEffect ensemble

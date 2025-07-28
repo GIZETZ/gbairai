@@ -1146,196 +1146,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Routes de messagerie
-  // Récupérer tous les utilisateurs (authentifié - pour la messagerie)
-  app.get("/api/users", requireAuth, async (req, res) => {
-    try {
-      const users = await storage.getAllUsers();
-      res.json(users);
-    } catch (error) {
-      console.error('Erreur récupération utilisateurs:', error);
-      res.status(500).json({ error: 'Erreur lors de la récupération des utilisateurs' });
-    }
-  });
-
-  // Endpoint pour la recherche d'utilisateurs (public)
-  app.get("/api/users/search", async (req, res) => {
-    try {
-      const { q } = req.query;
-      const currentUserId = req.user?.id;
-
-      if (!q || typeof q !== 'string') {
-        return res.json([]);
-      }
-
-      const users = await storage.searchUsers(q, currentUserId);
-
-      res.json(users);
-    } catch (error) {
-      console.error('Erreur recherche utilisateurs:', error);
-      res.status(500).json({ error: 'Erreur lors de la recherche des utilisateurs' });
-    }
-  });
-
-  // Route pour obtenir le profil d'un utilisateur
-  app.get("/api/users/:id/profile", async (req, res) => {
-    try {
-      const userId = parseInt(req.params.id);
-      const profile = await storage.getUserProfile(userId);
-
-      if (!profile) {
-        return res.status(404).json({ error: 'Utilisateur non trouvé' });
-      }
-
-      res.json(profile);
-    } catch (error) {
-      console.error('Erreur récupération profil:', error);
-      res.status(500).json({ error: 'Erreur lors de la récupération du profil' });
-    }
-  });
-
-  app.put("/api/users/profile", requireAuth, async (req, res) => {
-    try {
-      const userId = req.user?.id;
-      if (!userId) {
-        return res.status(401).json({ error: 'Utilisateur non authentifié' });
-      }
-
-      const { bio, location, website, avatar } = req.body;
-      const profileData = { bio, location, website, avatar };
-
-      const updatedUser = await storage.updateUserProfile(userId, profileData);
-
-      if (!updatedUser) {
-        return res.status(404).json({ error: 'Utilisateur non trouvé' });
-      }
-
-      res.json(updatedUser);
-    } catch (error) {
-      console.error('Erreur mise à jour profil:', error);
-      res.status(500).json({ error: 'Erreur lors de la mise à jour du profil' });
-    }
-  });
-
-  // Route pour récupérer les commentaires d'un Gbairai
-  app.get("/api/gbairais/:id/comments", async (req, res) => {
-    try {
-      const gbairaiId = parseInt(req.params.id);
-      const comments = await storage.getInteractionsByGbairai(gbairaiId);
-
-      // Filtrer seulement les commentaires principaux (pas les likes/shares et pas les réponses)
-      const mainCommentsOnly = comments.filter(comment => 
-        comment.type === 'comment' && !comment.parentCommentId
-      );
-
-      res.json(mainCommentsOnly);
-    } catch (error) {
-      console.error('Erreur récupération commentaires:', error);
-      res.status(500).json({ error: 'Erreur lors de la récupération des commentaires' });
-    }
-  });
-
-  // Route pour récupérer les réponses d'un commentaire spécifique
-  app.get("/api/comments/:id/replies", async (req, res) => {
-    try {
-      const commentId = parseInt(req.params.id);
-      const replies = await storage.getRepliesByCommentId(commentId);
-
-      res.json(replies);
-    } catch (error) {
-      console.error('Erreur récupération réponses:', error);
-      res.status(500).json({ error: 'Erreur lors de la récupération des réponses' });
-    }
-  });
-
-  // Route pour supprimer une interaction/commentaire
-  app.delete("/api/interactions/:id", requireAuth, async (req, res) => {
-    try {
-      const interactionId = parseInt(req.params.id);
-      const userId = req.user?.id || 0;
-
-      const success = await storage.deleteInteraction(interactionId, userId);
-
-      if (success) {
-        res.json({ message: 'Interaction supprimée avec succès' });
-      } else {
-        res.status(404).json({ error: 'Interaction non trouvée ou non autorisée' });
-      }
-    } catch (error) {
-      console.error('Erreur suppression interaction:', error);
-      res.status(500).json({ error: 'Erreur lors de la suppression' });
-    }
-  });
-
-  // Route pour traduire du texte avec OpenAI
-  app.post("/api/translate", requireAuth, async (req, res) => {
-    try {
-      const { text } = req.body;
-
-      if (!text) {
-        return res.status(400).json({ error: 'Texte requis' });
-      }
-
-      const openai = new OpenAI({
-        apiKey: process.env.OPENAI_API_KEY
-      });
-
-      const response = await openai.chat.completions.create({
-        model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
-        messages: [
-          {
-            role: "system",
-            content: "Tu es un traducteur professionnel. Traduis le texte suivant en français standard si c'est en nouchi ou en langue locale ivoirienne, ou en nouchi/français local si c'est en français standard. Garde le sens et l'émotion du message original."
-          },
-          {
-            role: "user",
-            content: text
-          }
-        ],
-        max_tokens: 200,
-        temperature: 0.3,
-      });
-
-      const translatedText = response.choices[0].message.content;
-
-      res.json({ translatedText });
-    } catch (error) {
-      console.error('Erreur traduction:', error);
-      res.status(500).json({ error: 'Erreur lors de la traduction' });
-    }
-  });
-
-  // Route pour signaler du contenu
-  app.post("/api/reports", requireAuth, async (req, res) => {
-    try {
-      const { type, targetId, reason } = req.body;
-      const userId = req.user?.id || 0;
-
-      if (!type || !targetId || !reason) {
-        return res.status(400).json({ error: 'Type, ID cible et raison requis' });
-      }
-
-      const report = await storage.createReport({
-        userId,
-        type,
-        targetId,
-        reason,
-        status: 'pending'
-      });
-
-      res.json({ message: 'Signalement enregistré avec succès', reportId: report.id });
-    } catch (error) {
-      console.error('Erreur signalement:', error);
-
-      // Gérer le cas où le contenu a déjà été signalé
-      if (error instanceof Error && error.message === 'Vous avez déjà signalé ce contenu') {
-        return res.status(400).json({ error: error.message });
-      }
-
-      res.status(500).json({ error: 'Erreur lors du signalement' });
-    }
-  });
-
-  // Routes de messagerie
 
   // Route pour récupérer une conversation spécifique
   app.get("/api/conversations/:id", requireAuth, async (req, res) => {
@@ -1352,7 +1162,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`Récupération conversation ${conversationId} pour utilisateur ${userId}`);
 
       const conversation = await storage.getConversationById(conversationId);
-      
+
       if (!conversation) {
         console.log(`Conversation ${conversationId} non trouvée`);
         return res.status(404).json({ error: 'Conversation non trouvée' });
@@ -1442,10 +1252,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user?.id || 0;
       console.log(`🔍 Récupération conversations pour utilisateur ${userId}`);
-      
+
       const allConversations = await storage.getConversationsByUserId(userId);
       console.log(`📊 ${allConversations.length} conversations trouvées avant filtrage`);
-      
+
       // Debug détaillé des conversations brutes
       allConversations.forEach(conv => {
         console.log(`📋 Conversation ${conv.id}: participants=${JSON.stringify(conv.participants)}`);
@@ -1462,7 +1272,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.log(`❌ Conversation ${conversation.id} supprimée pour utilisateur ${userId}`);
         }
       }
-      
+
       console.log(`📈 ${conversations.length} conversations après filtrage des supprimées`);
 
       // Enrichir les conversations avec les informations des participants
@@ -1485,7 +1295,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             ORDER BY created_at DESC 
             LIMIT 1
           `, [conversation.id]);
-          
+
           const lastMessage = lastMessageQuery.rows[0];
 
           // Compter les messages non lus
@@ -1505,7 +1315,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       );
 
       console.log(`🎯 ${enrichedConversations.length} conversations enrichies retournées`);
-      
+
       // Log détaillé des conversations enrichies
       enrichedConversations.forEach(conv => {
         const participantNames = conv.participants.map(p => `${p.username} (${p.id})`).join(', ');
@@ -1539,7 +1349,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Vérifier que l'utilisateur fait partie de la conversation
       const conversation = await storage.getConversationById(conversationId);
       console.log(`Recherche conversation ${conversationId}:`, conversation ? 'trouvée' : 'non trouvée');
-      
+
       if (!conversation) {
         console.log(`Conversation ${conversationId} non trouvée pour l'utilisateur ${userId}`);
         return res.status(404).json({ error: 'Conversation non trouvée' });
@@ -1547,7 +1357,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const participants = conversation.participants as number[];
       console.log(`Participants de la conversation ${conversationId}:`, participants);
-      
+
       if (!participants.includes(userId)) {
         console.log(`Utilisateur ${userId} non autorisé pour la conversation ${conversationId}`);
         return res.status(403).json({ error: 'Accès non autorisé' });
@@ -1891,7 +1701,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  
+
 
   // Route pour confirmer la réinitialisation avec le nouveau mot de passe
   app.post("/api/password/reset-confirm", async (req, res) => {
@@ -1909,14 +1719,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Utiliser le bon système de hashage (scrypt)
       const { hashPassword } = require('./auth');
       const hashedPassword = await hashPassword(newPassword);
-      
+
       // Mettre à jour le mot de passe de l'utilisateur
       const [updated] = await db
         .update(users)
         .set({ password: hashedPassword })
         .where(eq(users.email, email))
         .returning();
-      
+
       if (!updated) {
         return res.status(404).json({ error: "Utilisateur non trouvé" });
       }
@@ -1925,48 +1735,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Erreur confirmation réinitialisation:', error);
       res.status(500).json({ error: "Erreur lors de la modification du mot de passe" });
-    }
-  });
-
-  // Route temporaire pour réinitialiser le mot de passe admin (URGENCE)
-  app.post("/api/admin/reset-password", async (req, res) => {
-    try {
-      const { newPassword, adminKey } = req.body;
-
-      // Vérifier la clé d'urgence
-      if (adminKey !== "RESET_ADMIN_2025") {
-        return res.status(403).json({ error: "Clé d'administration invalide" });
-      }
-
-      if (!newPassword || newPassword.length < 6) {
-        return res.status(400).json({ error: "Nouveau mot de passe requis (min 6 caractères)" });
-      }
-
-      // Utiliser le système de hashage existant
-      const { hashPassword } = require('./auth');
-      const hashedPassword = await hashPassword(newPassword);
-      
-      // Mettre à jour le mot de passe de l'admin
-      const [updated] = await db
-        .update(users)
-        .set({ password: hashedPassword })
-        .where(eq(users.email, 'gbairai.app@gmail.com'))
-        .returning();
-      
-      if (!updated) {
-        return res.status(404).json({ error: "Administrateur non trouvé" });
-      }
-
-      console.log('✅ Mot de passe admin réinitialisé avec succès');
-      res.json({ 
-        success: true, 
-        message: "Mot de passe administrateur réinitialisé avec succès",
-        email: updated.email,
-        timestamp: new Date().toISOString()
-      });
-    } catch (error) {
-      console.error('❌ Erreur réinitialisation admin:', error);
-      res.status(500).json({ error: "Erreur lors de la réinitialisation" });
     }
   });
 

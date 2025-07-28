@@ -161,10 +161,9 @@ export function GbairaiCardMobile({
       return;
     }
 
-    // Pour les commentaires, ouvrir la vue commentaires au lieu de créer une interaction vide
+    // Pour les commentaires, rediriger vers la page dédiée
     if (type === 'comment') {
-      setShowComments(true);
-      onCommentsToggle?.(true);
+      window.location.href = `/comments/${gbairai.id}`;
       return;
     }
 

@@ -5,9 +5,10 @@
   "license": "MIT",
   "scripts": {
     "dev": "NODE_ENV=development tsx server/index.ts",
-    "build": "npm run build:client",
+    "build": "npm run build:client && npm run build:server",
     "build:client": "cd client && npm run build",
-    "start": "NODE_ENV=production PORT=10000 tsx server/index.ts"
+    "build:server": "tsc --project tsconfig.server.json",
+    "start": "NODE_ENV=production PORT=10000 node dist/server/index.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
@@ -85,7 +86,9 @@
     "wouter": "^3.3.5",
     "ws": "^8.18.0",
     "zod": "^3.24.2",
-    "zod-validation-error": "^3.4.0"
+    "zod-validation-error": "^3.4.0",
+    "tsx": "^4.19.1",
+    "typescript": "5.6.3"
   },
   "devDependencies": {
     "@replit/vite-plugin-cartographer": "^0.2.7",
@@ -108,8 +111,6 @@
     "esbuild": "^0.25.0",
     "postcss": "^8.4.47",
     "tailwindcss": "^3.4.17",
-    "tsx": "^4.19.1",
-    "typescript": "5.6.3",
     "vite": "^5.4.19"
   },
   "optionalDependencies": {

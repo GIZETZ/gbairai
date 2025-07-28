@@ -12,6 +12,11 @@ export function MobileNavigation({ hideWhenCommentsOpen }: MobileNavigationProps
   const [location] = useLocation();
   const { theme } = useTheme();
 
+  // Ne pas afficher la navigation si hideWhenCommentsOpen est true
+  if (hideWhenCommentsOpen) {
+    return null;
+  }
+
   const navItems = [
     { 
       href: "/", 

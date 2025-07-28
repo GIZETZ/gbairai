@@ -34,7 +34,28 @@ if (!databaseUrl.startsWith('postgresql://')) {
 
 console.log("URL nettoyée:", databaseUrl.substring(0, 30) + "...");
 
-export const pool = new Pool({ connectionString: databaseUrl });
+console.log("DATABASE_URL chargée depuis l'environnement");
+
+export const pool = new Pool({
+  connectionString: databaseUrl,
+  ssl: {
+    rejectUnauthorized: false
+  },
+  // Configuration pour éviter les timeouts
+  connectionTimeoutMillis: 10000,
+  idleTimeoutMillis: 30000,
+  max: 20
+});
+
+// Gestion des erreurs de connexion
+pool.on('error', (err) => {
+  console.error('❌ Database pool error:', err);
+});
+
+pool.on('connect', () => {
+  console.log('✅ Database pool connected');
+});
+
 export const db = drizzle({ client: pool, schema });
 
 export const users = pgTable("users", {

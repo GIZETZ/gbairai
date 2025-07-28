@@ -58,7 +58,6 @@ import ConversationPage from "@/pages/conversation-page";
 import UserProfilePage from "@/pages/user-profile-page";
 import NotificationsPage from "@/pages/notifications-page";
 import BlockedUsersPage from "@/pages/blocked-users-page";
-import CommentsPage from "@/pages/comments-page";
 import ResetPasswordPage from "@/pages/reset-password-page";
 import GbairaiPage from "@/pages/gbairai-page";
 import AdminPage from "@/pages/admin-page";
@@ -87,7 +86,6 @@ function Router() {
       <Route path="/reset-password" component={ResetPasswordPage} />
       <Route path="/privacy-policy" component={PrivacyPolicyPage} />
       <Route path="/about" component={AboutPage} />
-      <Route path="/comments/:id" component={CommentsPage} />
       <Route component={NotFound} />
     </Switch>
   );

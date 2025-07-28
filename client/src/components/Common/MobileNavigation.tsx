@@ -3,89 +3,10 @@ import { MapPin, MessageSquare, Search, User, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/hooks/useTheme";
-import { useState, useEffect } from "react";
 
-interface MobileNavigationProps {
-  hideWhenCommentsOpen?: boolean;
-}
-
-export function MobileNavigation({ hideWhenCommentsOpen }: MobileNavigationProps) {
+export function MobileNavigation() {
   const [location] = useLocation();
   const { theme } = useTheme();
-  const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
-
-  // Détecter l'ouverture du clavier virtuel avec une approche plus robuste
-  useEffect(() => {
-    let initialViewportHeight = window.visualViewport?.height || window.innerHeight;
-    let timeoutId: NodeJS.Timeout;
-
-    const handleViewportChange = () => {
-      // Réinitialiser la hauteur de référence si nécessaire
-      const currentHeight = window.visualViewport?.height || window.innerHeight;
-      const heightDifference = initialViewportHeight - currentHeight;
-      
-      // Délai pour éviter les faux positifs lors du redimensionnement
-      clearTimeout(timeoutId);
-      timeoutId = setTimeout(() => {
-        // Si la hauteur a diminué de plus de 100px, considérer que le clavier est ouvert
-        setIsKeyboardOpen(heightDifference > 100);
-      }, 100);
-    };
-
-    const handleFocusIn = (e: FocusEvent) => {
-      // Si un élément de saisie reçoit le focus, considérer que le clavier va s'ouvrir
-      const target = e.target as HTMLElement;
-      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')) {
-        setTimeout(() => setIsKeyboardOpen(true), 300);
-      }
-    };
-
-    const handleFocusOut = () => {
-      // Délai avant de considérer que le clavier est fermé
-      setTimeout(() => {
-        const currentHeight = window.visualViewport?.height || window.innerHeight;
-        const heightDifference = initialViewportHeight - currentHeight;
-        setIsKeyboardOpen(heightDifference > 100);
-      }, 300);
-    };
-
-    // Utiliser visualViewport si disponible (plus précis sur mobile)
-    if (window.visualViewport) {
-      window.visualViewport.addEventListener('resize', handleViewportChange);
-    } else {
-      // Fallback pour les navigateurs plus anciens
-      window.addEventListener('resize', handleViewportChange);
-    }
-
-    // Écouter les événements de focus pour détecter l'ouverture/fermeture du clavier
-    document.addEventListener('focusin', handleFocusIn);
-    document.addEventListener('focusout', handleFocusOut);
-
-    return () => {
-      clearTimeout(timeoutId);
-      if (window.visualViewport) {
-        window.visualViewport.removeEventListener('resize', handleViewportChange);
-      } else {
-        window.removeEventListener('resize', handleViewportChange);
-      }
-      document.removeEventListener('focusin', handleFocusIn);
-      document.removeEventListener('focusout', handleFocusOut);
-    };
-  }, []);
-
-  // Ne pas afficher la navigation si hideWhenCommentsOpen est true OU si le clavier est ouvert
-  if (hideWhenCommentsOpen || isKeyboardOpen) {
-    return null;
-  }
-
-  // Vérifier si les commentaires sont ouverts en regardant les éléments DOM
-  const commentsOpen = document.querySelector('.comments-overlay') || 
-                      document.querySelector('.comment-form-overlay') ||
-                      document.querySelector('.comments-card');
-  
-  if (commentsOpen) {
-    return null;
-  }
 
   const navItems = [
     { 

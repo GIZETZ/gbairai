@@ -161,7 +161,7 @@ export function GbairaiCardMobile({
       return;
     }
 
-    // Pour les commentaires, ouvrir l'interface intégrée
+    // Pour les commentaires, ouvrir la vue commentaires au lieu de créer une interaction vide
     if (type === 'comment') {
       setShowComments(true);
       onCommentsToggle?.(true);
@@ -293,12 +293,11 @@ export function GbairaiCardMobile({
       document.addEventListener('touchmove', preventBodyScroll, { passive: false });
       document.addEventListener('wheel', preventBodyScroll, { passive: false });
 
-      // Bloquer le scroll du body et ajouter une classe pour masquer la navigation
+      // Bloquer le scroll du body
       document.body.style.overflow = 'hidden';
       document.body.style.position = 'fixed';
       document.body.style.width = '100%';
       document.body.style.height = '100%';
-      document.body.classList.add('comments-active');
 
       return () => {
         document.removeEventListener('keydown', handleKeyDown);
@@ -306,12 +305,11 @@ export function GbairaiCardMobile({
         document.removeEventListener('touchmove', preventBodyScroll);
         document.removeEventListener('wheel', preventBodyScroll);
 
-        // Restaurer le scroll du body et retirer la classe
+        // Restaurer le scroll du body
         document.body.style.overflow = '';
         document.body.style.position = '';
         document.body.style.width = '';
         document.body.style.height = '';
-        document.body.classList.remove('comments-active');
       };
     }
   }, [showComments, repliesOverlay.isVisible]);

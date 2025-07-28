@@ -24,10 +24,28 @@ async function hashPassword(password: string) {
 }
 
 async function comparePasswords(supplied: string, stored: string) {
+  // Vérifier si le mot de passe stocké a le bon format (hash.salt)
+  if (!stored || !stored.includes('.')) {
+    console.log('Mot de passe mal formaté en base:', stored ? 'présent mais sans point' : 'absent');
+    return false;
+  }
+  
   const [hashed, salt] = stored.split(".");
-  const hashedBuf = Buffer.from(hashed, "hex");
-  const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
-  return timingSafeEqual(hashedBuf, suppliedBuf);
+  
+  // Vérifier que les deux parties existent
+  if (!hashed || !salt) {
+    console.log('Hash ou salt manquant:', { hashed: !!hashed, salt: !!salt });
+    return false;
+  }
+  
+  try {
+    const hashedBuf = Buffer.from(hashed, "hex");
+    const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
+    return timingSafeEqual(hashedBuf, suppliedBuf);
+  } catch (error) {
+    console.error('Erreur lors de la comparaison des mots de passe:', error);
+    return false;
+  }
 }
 
 // Interface pour les données temporaires d'inscription

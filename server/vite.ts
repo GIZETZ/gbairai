@@ -71,9 +71,27 @@ export function serveStatic(app: Express) {
   const distPath = path.resolve(import.meta.dirname, "public");
 
   if (!fs.existsSync(distPath)) {
-    throw new Error(
-      `Could not find the build directory: ${distPath}, make sure to build the client first`,
-    );
+    console.warn(`Build directory not found: ${distPath}, creating it...`);
+    fs.mkdirSync(distPath, { recursive: true });
+    
+    // Create a simple index.html if none exists
+    const fallbackHtml = `<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gbairai - En cours de déploiement</title>
+</head>
+<body>
+    <div style="display: flex; justify-content: center; align-items: center; height: 100vh; font-family: Arial;">
+        <div style="text-align: center;">
+            <h1>🚀 Gbairai en cours de déploiement</h1>
+            <p>L'application sera bientôt disponible...</p>
+        </div>
+    </div>
+</body>
+</html>`;
+    fs.writeFileSync(path.resolve(distPath, "index.html"), fallbackHtml);
   }
 
   app.use(express.static(distPath));

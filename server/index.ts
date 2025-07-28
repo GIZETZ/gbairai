@@ -74,12 +74,11 @@ app.use((req, res, next) => {
   // ALWAYS serve the app on the port specified in the environment variable PORT
   // Default to 10000 for Replit deployment compatibility.
   // this serves both the API and the client.
-  const port = parseInt(process.env.PORT || '10000', 10);
+  const port = parseInt(process.env.PORT || '5000', 10);
   const host = "0.0.0.0";
   
-  // Force production mode for deployment
-  if (process.env.NODE_ENV === 'production' || process.env.PORT) {
-    process.env.NODE_ENV = 'production';
+  // Set production mode for deployment
+  if (process.env.NODE_ENV === 'production') {
     app.set('env', 'production');
   }
   

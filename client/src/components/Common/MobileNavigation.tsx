@@ -4,7 +4,11 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/hooks/useTheme";
 
-export function MobileNavigation() {
+interface MobileNavigationProps {
+  hideWhenCommentsOpen?: boolean;
+}
+
+export function MobileNavigation({ hideWhenCommentsOpen }: MobileNavigationProps) {
   const [location] = useLocation();
   const { theme } = useTheme();
 

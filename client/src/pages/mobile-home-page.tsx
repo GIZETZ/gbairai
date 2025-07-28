@@ -4,7 +4,7 @@ import { GbairaiFilters } from "@/components/Common/GbairaiFilters";
 import { useGbairais, useGbairaiComments } from "@/hooks/useGbairais";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { Plus, MessageSquare, Heart, User, Bell } from "lucide-react";
+import { Plus, MessageSquare, Heart, User, Bell, LogIn, UserPlus } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { Badge } from "@/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
@@ -13,8 +13,14 @@ import { useAuth } from "@/hooks/use-auth";
 import { useState, useEffect, useMemo, useRef } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { InteractiveMap } from "@/components/Map/InteractiveMap";
+import { GbairaiForm } from "@/components/Gbairai/GbairaiForm";
 
 export default function MobileHomePage() {
+  const { user, isLoading: authLoading } = useAuth();
+  const [showAuthDialog, setShowAuthDialog] = useState(false);
+
   // Charger les filtres depuis localStorage au démarrage
   const loadFiltersFromStorage = () => {
     try {
@@ -40,17 +46,16 @@ export default function MobileHomePage() {
   const [isDragging, setIsDragging] = useState(false);
   const [dragPosition, setDragPosition] = useState({ x: 16, y: typeof window !== 'undefined' ? window.innerHeight * 0.85 : 600 });
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
-  
+
   // Hooks personnalisés
-  const { user } = useAuth();
   const [location, setLocation] = useLocation();
-  
+
   // Refs
   const commentBoxRef = useRef<HTMLDivElement>(null);
 
   // Queries React Query
   const { data: gbairais, isLoading, refetch } = useGbairais(filters);
-  
+
   const { data: notifications = [] } = useQuery({
     queryKey: ['notifications'],
     queryFn: notificationsApi.getNotifications,
@@ -66,6 +71,11 @@ export default function MobileHomePage() {
 
   // Variables dérivées
   const unreadCount = notifications.filter(n => !n.read).length;
+
+  // Fonction pour gérer les actions nécessitant une authentification
+  const handleAuthRequired = () => {
+    setShowAuthDialog(true);
+  };
 
   // Tous les useEffect ensemble
   // Auto-refresh when app comes back to foreground
@@ -223,50 +233,18 @@ export default function MobileHomePage() {
     }
   };
 
-  if (isLoading) {
+  if (authLoading) {
     return (
       <MobileLayout showTopButtons={false}>
-        <div className="h-full flex items-center justify-center">
-          <div className="w-full max-w-sm bg-card rounded-xl p-6">
-            <Skeleton className="h-6 w-full mb-4" />
-            <Skeleton className="h-4 w-3/4 mb-4" />
-            <Skeleton className="h-4 w-1/2 mb-4" />
-            <Skeleton className="h-20 w-full" />
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="space-y-4 text-center">
+            <Skeleton className="h-8 w-48 mx-auto" />
+            <Skeleton className="h-4 w-32 mx-auto" />
           </div>
         </div>
       </MobileLayout>
     );
   }
-
-  if (!gbairais || gbairais.length === 0) {
-    return (
-      <MobileLayout showTopButtons={false}>
-        <div className="h-full flex flex-col items-center justify-center px-4">
-          <div className="text-center text-muted-foreground mb-8">
-            <MessageSquare className="w-16 h-16 mx-auto mb-4 opacity-50" />
-            <h3 className="text-lg font-medium mb-2">Aucun Gbairai pour le moment</h3>
-            <p className="text-sm">Soyez le premier à partager votre histoire</p>
-          </div>
-          <Link href="/create">
-            <Button className="bg-blue-500 hover:bg-blue-600 text-white rounded-full px-8 py-3">
-              <Plus className="w-5 h-5 mr-2" />
-              Créer un Gbairai
-            </Button>
-          </Link>
-        </div>
-      </MobileLayout>
-    );
-  }
-
-  const handleFilterChange = (newFilters: typeof filters) => {
-    setFilters(newFilters);
-    // Sauvegarder les filtres dans localStorage
-    try {
-      localStorage.setItem('gbairai-filters', JSON.stringify(newFilters));
-    } catch (error) {
-      console.error('Erreur lors de la sauvegarde des filtres:', error);
-    }
-  };
 
   return (
     <MobileLayout className="p-0" showTopButtons={false}>
@@ -275,26 +253,67 @@ export default function MobileHomePage() {
         alignItems: 'center', 
         paddingTop: '10vh'
       }}>
+        {/* Banner pour les visiteurs non connectés */}
+        {!user && (
+          <div className="fixed left-0 right-0 z-50 pt-20 md:pt-8 px-6 md:px-12" style={{ top: '0%', background: 'transparent' }}>
+            <div className="flex justify-end items-start mb-4">
+            </div>
+            <div className="space-y-6">
+              <div className="space-y-6">
+                <Card className="border-2 border-blue-200 bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20">
+                  <CardContent className="p-4 text-center">
+                    <h2 className="text-lg font-semibold text-blue-800 dark:text-blue-200 mb-2">
+                      🎉 Bienvenue sur Gbairai !
+                    </h2>
+                    <p className="text-blue-700 dark:text-blue-300 mb-4 text-sm">
+                      Découvrez les émotions et actualités de la Côte d'Ivoire en temps réel. 
+                      Créez votre compte en 30 secondes pour participer !
+                    </p>
+                    <div className="flex gap-2 justify-center">
+                      <Link href="/auth">
+                        <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
+                          <UserPlus className="w-4 h-4 mr-2" />
+                          Créer un compte
+                        </Button>
+                      </Link>
+                      <Link href="/auth">
+                        <Button variant="outline" size="sm" className="border-blue-300 text-blue-700">
+                          <LogIn className="w-4 h-4 mr-2" />
+                          Se connecter
+                        </Button>
+                      </Link>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Filters */}
-        <div className="fixed left-0 right-0 z-50 pt-20 md:pt-8 px-6 md:px-12" style={{ top: '-30%', background: 'transparent' }}>
+        <div className="fixed left-0 right-0 z-50 pt-20 md:pt-8 px-6 md:px-12" style={{ top: (!user ? '15%' : '-30%'), background: 'transparent' }}>
           <div className="flex justify-end items-start mb-4">
             <div className="flex space-x-2">
-              <Link href="/messages">
-                <Button size="sm" variant="outline" className="bg-white/95 backdrop-blur-sm border-yellow-300 shadow-lg hover:bg-white text-yellow-700">
-                  <MessageSquare className="w-4 h-4" />
-                </Button>
-              </Link>
+              {user ? (
+                <>
+                  <Link href="/messages">
+                    <Button size="sm" variant="outline" className="bg-white/95 backdrop-blur-sm border-yellow-300 shadow-lg hover:bg-white text-yellow-700">
+                      <MessageSquare className="w-4 h-4" />
+                    </Button>
+                  </Link>
 
-              <Link href="/notifications">
-                <Button size="sm" variant="outline" className="bg-white/95 backdrop-blur-sm border-yellow-300 shadow-lg hover:bg-white text-yellow-700 relative">
-                  <Bell className="w-4 h-4" />
-                  {unreadCount > 0 && (
-                    <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center p-0">
-                      {unreadCount > 9 ? '9+' : unreadCount}
-                    </Badge>
-                  )}
-                </Button>
-              </Link>
+                  <Link href="/notifications">
+                    <Button size="sm" variant="outline" className="bg-white/95 backdrop-blur-sm border-yellow-300 shadow-lg hover:bg-white text-yellow-700 relative">
+                      <Bell className="w-4 h-4" />
+                      {unreadCount > 0 && (
+                        <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center p-0">
+                          {unreadCount > 9 ? '9+' : unreadCount}
+                        </Badge>
+                      )}
+                    </Button>
+                  </Link>
+                </>
+              ) : null}
             </div>
           </div>
 
@@ -425,6 +444,53 @@ export default function MobileHomePage() {
           </div>
         </div>
         )}
+
+        {/* Dialog d'invitation à l'inscription */}
+        <Dialog open={showAuthDialog} onOpenChange={setShowAuthDialog}>
+          <DialogContent className="bg-white dark:bg-gray-800">
+            <DialogHeader>
+              <DialogTitle className="text-center text-xl font-bold text-blue-600">
+                🚀 Rejoignez Gbairai !
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 text-center">
+              <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
+                <p className="text-gray-700 dark:text-gray-300 mb-3">
+                  ⚡ <strong>Inscription ultra-rapide :</strong> 30 secondes chrono !
+                </p>
+                <ul className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
+                  <li>• Partagez vos émotions et découvertes</li>
+                  <li>• Interagissez avec la communauté</li>
+                  <li>• Accédez à toutes les fonctionnalités</li>
+                  <li>• Carte interactive complète</li>
+                </ul>
+              </div>
+
+              <div className="flex flex-col gap-3">
+                <Link href="/auth">
+                  <Button className="w-full bg-blue-600 hover:bg-blue-700" onClick={() => setShowAuthDialog(false)}>
+                    <UserPlus className="w-4 h-4 mr-2" />
+                    Créer mon compte (30 sec)
+                  </Button>
+                </Link>
+                <Link href="/auth">
+                  <Button variant="outline" className="w-full" onClick={() => setShowAuthDialog(false)}>
+                    <LogIn className="w-4 h-4 mr-2" />
+                    J'ai déjà un compte
+                  </Button>
+                </Link>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => setShowAuthDialog(false)}
+                  className="text-gray-500"
+                >
+                  Continuer en tant que visiteur
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </MobileLayout>
   );

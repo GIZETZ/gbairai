@@ -152,7 +152,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Routes Gbairais
+  // Routes Gbairais (accessible aux visiteurs)
   app.get("/api/gbairais", async (req, res) => {
     try {
       const limit = parseInt(req.query.limit as string) || 20;

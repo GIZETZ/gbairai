@@ -36,7 +36,17 @@ const emotionEmojis = {
   inclassable: '🤷'
 };
 
-export function InteractiveMap() {
+interface InteractiveMapProps {
+  compact?: boolean;
+  isGuest?: boolean;
+  onAuthRequired?: () => void;
+}
+
+export function InteractiveMap({ 
+  compact = false, 
+  isGuest = false, 
+  onAuthRequired 
+}: InteractiveMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<any>(null);
   const markersRef = useRef<any>(null);
@@ -433,6 +443,7 @@ export function InteractiveMap() {
                 style={{ backgroundColor: color }}
                 onClick={() => handleEmotionFilter(emotion)}
                 title={emotion}
+                disabled={isGuest}
               />
             ))}
           </div>
@@ -451,7 +462,7 @@ export function InteractiveMap() {
           </Button>
           <Button
             onClick={handleMyLocation}
-            disabled={locationLoading}
+            disabled={locationLoading || isGuest}
             size="sm"
             className="flex-1 bg-orange-600 hover:bg-orange-700 text-white"
           >
@@ -464,7 +475,7 @@ export function InteractiveMap() {
         <div className="mt-2">
           <Button
             onClick={handleMyLocation}
-            disabled={locationLoading}
+            disabled={locationLoading || isGuest}
             variant="outline"
             size="sm"
             className="w-full bg-gray-700 border-gray-600 text-white hover:bg-gray-600"
@@ -480,7 +491,7 @@ export function InteractiveMap() {
           variant="outline"
           size="sm"
           className="w-full mt-2 bg-gray-700 border-gray-600 text-white hover:bg-gray-600"
-          disabled={gbairaisLoading}
+          disabled={gbairaisLoading || isGuest}
         >
           <RefreshCw className={`w-4 h-4 mr-2 ${gbairaisLoading ? 'animate-spin' : ''}`} />
           Actualiser

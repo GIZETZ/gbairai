@@ -28,7 +28,7 @@ import AboutPage from "@/pages/about-page";
 function Router() {
   return (
     <Switch>
-      <ProtectedRoute path="/" component={MobileHomePage} />
+      <Route path="/" component={MobileHomePage} />
       <ProtectedRoute path="/create" component={CreatePage} />
       <ProtectedRoute path="/map" component={MapPage} />
       <ProtectedRoute path="/feed" component={FeedPage} />

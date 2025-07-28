@@ -1,3 +1,6 @@
+Applying changes to the GbairaiCardMobile component to handle guest users and authentication requirements.
+```
+```replit_final_file
 import React from "react";
             import { GbairaiWithInteractions } from "@shared/schema";
             import { formatDistanceToNow } from "date-fns";
@@ -23,10 +26,17 @@ import React from "react";
 
             interface GbairaiCardMobileProps {
               gbairai: GbairaiWithInteractions;
-              onCommentsToggle?: (isOpen: boolean) => void;
+              highlighted?: boolean;
+              isGuest?: boolean;
+              onAuthRequired?: () => void;
             }
 
-            export function GbairaiCardMobile({ gbairai, onCommentsToggle }: GbairaiCardMobileProps) {
+            export function GbairaiCardMobile({ 
+              gbairai, 
+              highlighted = false,
+              isGuest = false,
+              onAuthRequired
+            }: GbairaiCardMobileProps) {
               const { user } = useAuth();
               const { toast } = useToast();
               const interactMutation = useInteractWithGbairai();
@@ -129,6 +139,10 @@ import React from "react";
               });
 
               const handleInteraction = async (type: string) => {
+                if (isGuest) {
+                  onAuthRequired?.();
+                  return;
+                }
                 if (!user) {
                   toast({
                     title: "Connexion requise",
@@ -284,19 +298,19 @@ import React from "react";
                   document.addEventListener('keydown', preventBodyKeyboardScroll);
                   document.addEventListener('touchmove', preventBodyScroll, { passive: false });
                   document.addEventListener('wheel', preventBodyScroll, { passive: false });
-                  
+
                   // Bloquer le scroll du body
                   document.body.style.overflow = 'hidden';
                   document.body.style.position = 'fixed';
                   document.body.style.width = '100%';
                   document.body.style.height = '100%';
-                  
+
                   return () => {
                     document.removeEventListener('keydown', handleKeyDown);
                     document.removeEventListener('keydown', preventBodyKeyboardScroll);
                     document.removeEventListener('touchmove', preventBodyScroll);
                     document.removeEventListener('wheel', preventBodyScroll);
-                    
+
                     // Restaurer le scroll du body
                     document.body.style.overflow = '';
                     document.body.style.position = '';
@@ -363,6 +377,10 @@ import React from "react";
               };
 
               const handleLikeComment = async (commentId: number) => {
+                if (isGuest) {
+                  onAuthRequired?.();
+                  return;
+                }
                 if (!user) {
                   toast({
                     title: "Connexion requise",
@@ -482,6 +500,10 @@ import React from "react";
               }, [activeCommentMenu, deleteConfirmation.show]);
 
               const handleDeleteComment = async (commentId?: number) => {
+                if (isGuest) {
+                  onAuthRequired?.();
+                  return;
+                }
                 const idToDelete = commentId || activeCommentMenu?.commentId;
                 if (!idToDelete) return;
 
@@ -502,6 +524,10 @@ import React from "react";
               };
 
               const confirmDeleteComment = async () => {
+                if (isGuest) {
+                  onAuthRequired?.();
+                  return;
+                }
                 if (!deleteConfirmation.commentId) return;
 
                 try {
@@ -564,6 +590,10 @@ import React from "react";
               };
 
               const handleTranslateComment = async () => {
+                if (isGuest) {
+                  onAuthRequired?.();
+                  return;
+                }
                 if (!activeCommentMenu) return;
 
                 const comment = comments.find((c: any) => c.id === activeCommentMenu.commentId);
@@ -597,6 +627,10 @@ import React from "react";
               };
 
               const handleReportComment = async () => {
+                if (isGuest) {
+                  onAuthRequired?.();
+                  return;
+                }
                 if (!activeCommentMenu) return;
 
                 try {
@@ -632,6 +666,10 @@ import React from "react";
               const cardRef = useRef<HTMLDivElement>(null);
 
               const captureAndShare = async () => {
+                if (isGuest) {
+                  onAuthRequired?.();
+                  return;
+                }
                 if (!cardRef.current) return null;
 
                 try {
@@ -680,6 +718,10 @@ import React from "react";
               };
 
               const handleExternalShare = async () => {
+                if (isGuest) {
+                  onAuthRequired?.();
+                  return;
+                }
                 try {
                   const shareUrl = `${window.location.origin}/gbairai/${gbairai.id}`;
                   const shareText = `${gbairai.content.substring(0, 100)}${gbairai.content.length > 100 ? '...' : ''}`;
@@ -736,6 +778,10 @@ import React from "react";
               };
 
               const handleReportGbairai = async () => {
+                if (isGuest) {
+                  onAuthRequired?.();
+                  return;
+                }
                 if (!user) {
                   toast({
                     title: "Connexion requise",
@@ -776,6 +822,10 @@ import React from "react";
               };
 
               const handleReplyToComment = (comment: any, parentUsername?: string) => {
+                if (isGuest) {
+                  onAuthRequired?.();
+                  return;
+                }
                 const username = comment.user?.username || comment.username;
                 // Si on est dans l'overlay, on répond au commentaire parent
                 if (repliesOverlay.isVisible && repliesOverlay.commentId) {
@@ -789,6 +839,10 @@ import React from "react";
               };
 
               const toggleReplies = (commentId: number) => {
+                if (isGuest) {
+                  onAuthRequired?.();
+                  return;
+                }
                 setExpandedReplies(prev => {
                   const newSet = new Set(prev);
                   if (newSet.has(commentId)) {
@@ -801,6 +855,10 @@ import React from "react";
               };
 
               const openRepliesOverlay = async (commentId: number, parentComment: any) => {
+                if (isGuest) {
+                  onAuthRequired?.();
+                  return;
+                }
                 // Recharger les réponses avant d'ouvrir l'overlay
                 try {
                   const response = await fetch(`/api/comments/${commentId}/replies`, {
@@ -946,1331 +1004,4 @@ import React from "react";
                 >
                 <div 
                     ref={cardRef}
-                    className="w-full h-full bg-gradient-to-br from-slate-900 via-gray-800 to-slate-900 rounded-2xl overflow-hidden border border-white/10 shadow-2xl backdrop-blur-sm relative"
-                  >
-                  <div className="background"></div>
-                  <div className="overlay"></div>
-                  <div className="content">
-                    <div className="emotion-header">
-                      <span className="emotion-emoji">{emotion.emoji}</span>
-                      <span className="emotion-label">{emotion.label}</span>
-                      <span className="location">
-                        <MapPin className="w-3 h-3" />
-                        {locationText}
-                      </span>
-                    </div>
-
-                    <div className="gbairai-content pt-[0px] pb-[0px] text-[30px] font-semibold" style={{ 
-                      textAlign: 'center',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      flexGrow: 1,
-                      height: '100%',
-                      fontSize: '30px'
-                    }}>
-                      {gbairai.content}
-                    </div>
-
-                    <div className="gbairai-footer">
-                      <div className="meta">
-                        {/* Afficher le nom de l'utilisateur si la publication n'est pas anonyme */}
-                        {!gbairai.isAnonymous && gbairai.user && (
-                          <div className="author-info" style={{ 
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '8px',
-                            marginBottom: '4px',
-                            color: 'rgba(255, 255, 255, 0.9)',
-                            fontSize: '14px',
-                            fontWeight: '500'
-                          }}>
-                            <User className="w-4 h-4" />
-                            <span>Par {gbairai.user.username}</span>
-                          </div>
-                        )}
-                        {timeAgo}
-                      </div>
-
-                      <div className="actions">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleInteraction('like')}
-                          className="action-btn"
-                          disabled={interactMutation.isPending}
-                        >
-                          <Heart className="w-4 h-4" />
-                          {gbairai.likesCount > 0 && <span>{gbairai.likesCount}</span>}
-                        </Button>
-
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleInteraction('comment')}
-                          className="action-btn"
-                          disabled={interactMutation.isPending}
-                        >
-                          <MessageCircle className="w-4 h-4" />
-                          {gbairai.commentsCount > 0 && <span>{gbairai.commentsCount}</span>}
-                        </Button>
-
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="action-btn"
-                              disabled={interactMutation.isPending}
-                            >
-                              <Share2 className="w-4 h-4" />
-                              {gbairai.sharesCount > 0 && <span>{gbairai.sharesCount}</span>}
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent 
-                            className="bg-black/90 border-white/20 backdrop-blur-md"
-                            style={{
-                              backgroundColor: 'rgba(0, 0, 0, 0.95)',
-                              borderColor: 'rgba(255, 255, 255, 0.2)',
-                              backdropFilter: 'blur(10px)',
-                              zIndex: 9999
-                            }}
-                          >
-                            <DropdownMenuItem 
-                              onClick={handleExternalShare}
-                              className="text-white hover:bg-white/10 focus:bg-white/10"
-                              style={{
-                                color: 'white',
-                                padding: '8px 12px'
-                              }}
-                            >
-                              <Share2 className="mr-2 h-4 w-4" />
-                              Partager le lien
-                            </DropdownMenuItem>
-                            <ShareToConversationModal 
-                              gbairaiId={gbairai.id} 
-                              gbairaiContent={gbairai.content}
-                              trigger={
-                                <DropdownMenuItem 
-                                  onSelect={(e) => e.preventDefault()}
-                                  className="text-white hover:bg-white/10 focus:bg-white/10"
-                                  style={{
-                                    color: 'white',
-                                    padding: '8px 12px'
-                                  }}
-                                >
-                                  <Send className="mr-2 h-4 w-4" />
-                                  Partager dans une discussion
-                                </DropdownMenuItem>
-                              }
-                            />
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-
-                        {/* Menu des options */}
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="action-btn"
-                            >
-                              <MoreVertical className="w-4 h-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent 
-                            className="bg-black/90 border-white/20 backdrop-blur-md"
-                            style={{
-                              backgroundColor: 'rgba(0, 0, 0, 0.95)',
-                              borderColor: 'rgba(255, 255, 255, 0.2)',
-                              backdropFilter: 'blur(10px)',
-                              zIndex: 9999
-                            }}
-                          >
-                            <DropdownMenuItem 
-                              onClick={handleReportGbairai}
-                              className="text-red-400 hover:bg-white/10 focus:bg-white/10"
-                              style={{
-                                color: '#ff6b6b',
-                                padding: '8px 12px'
-                              }}
-                            >
-                              <Flag className="mr-2 h-4 w-4" />
-                              Signaler
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
-                    </div>
-
-                    {/* Comments View - Card Style */}
-                    {showComments && (
-                      <div 
-                        className="comments-card bg-[#ffffff00] text-[#ebebeb]" 
-                        style={{ 
-                          position: 'fixed', 
-                          top: 0, 
-                          left: 0, 
-                          right: 0, 
-                          bottom: 0, 
-                          width: '100vw',
-                          height: '100vh',
-                          zIndex: 99999,
-                          backgroundColor: 'rgba(0,0,0,0.95)',
-                          backdropFilter: 'blur(10px)',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          margin: 0,
-                          padding: 0,
-                          touchAction: 'manipulation',
-                          WebkitTouchCallout: 'none',
-                          WebkitUserSelect: 'none',
-                          userSelect: 'none',
-                          overscrollBehavior: 'none',
-                          overflow: 'hidden'
-                        }}
-                        onTouchStart={(e) => e.stopPropagation()}
-                        onTouchMove={(e) => e.stopPropagation()}
-                        onTouchEnd={(e) => e.stopPropagation()}
-                        onScroll={(e) => e.preventDefault()}
-                      >
-                        <div className="comments-header" style={{ 
-                          position: 'sticky', 
-                          top: 0, 
-                          zIndex: 10,
-                          backgroundColor: 'rgba(0,0,0,0.9)',
-                          padding: '12px 16px',
-                          display: 'flex',
-                          justifyContent: 'space-between',
-                          alignItems: 'center',
-                          borderBottom: '1px solid rgba(255,255,255,0.1)'
-                        }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={handleCloseComments}
-                              className="back-btn"
-                              style={{ 
-                                color: 'white',
-                                padding: '8px',
-                                borderRadius: '8px',
-                                backgroundColor: 'rgba(255,255,255,0.1)',
-                                border: '1px solid rgba(255,255,255,0.2)'
-                              }}
-                            >
-                              <ArrowLeft className="w-4 h-4" />
-                            </Button>
-                            <h2 style={{ color: 'white', margin: 0 }}>Commentaires ({comments.length})</h2>
-                          </div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <span style={{ 
-                              color: 'rgba(255,255,255,0.6)', 
-                              fontSize: '12px',
-                              fontWeight: '500'
-                            }}>
-                              Appuyez sur Échap pour fermer
-                            </span>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={handleCloseComments}
-                              className="close-btn"
-                              style={{ 
-                                color: 'white',
-                                padding: '8px',
-                                borderRadius: '8px',
-                                backgroundColor: 'rgba(255,255,255,0.1)',
-                                border: '1px solid rgba(255,255,255,0.2)'
-                              }}
-                            >
-                              <X className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </div>
-
-                        <div 
-                          className="comments-list"
-                          style={{ 
-                            flex: 1,
-                            overflowY: 'auto', 
-                            overflowX: 'hidden',
-                            padding: '8px 12px',
-                            paddingBottom: '120px',
-                            WebkitOverflowScrolling: 'touch',
-                            position: 'relative',
-                            touchAction: 'pan-y',
-                            scrollPaddingBottom: '120px',
-                            overscrollBehavior: 'contain',
-                            isolation: 'isolate'
-                          }}
-                          onTouchStart={(e) => e.stopPropagation()}
-                          onTouchMove={(e) => e.stopPropagation()}
-                        >
-                          {commentsLoading ? (
-                            <div style={{ 
-                              display: 'flex',
-                              flexDirection: 'column',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              height: '200px',
-                              color: '#9CA3AF'
-                            }}>
-                              <div style={{ 
-                                width: '32px',
-                                height: '32px',
-                                border: '3px solid rgba(255,255,255,0.1)',
-                                borderTop: '3px solid #3B82F6',
-                                borderRadius: '50%',
-                                animation: 'spin 1s linear infinite',
-                                marginBottom: '16px'
-                              }}></div>
-                              <p>Chargement des commentaires...</p>
-                            </div>
-                          ) : comments.length === 0 ? (
-                            <>
-                              {/* Indicateur de scroll - premiers commentaires - VERSION COMPACTE */}
-                              <div style={{ 
-                                marginBottom: '8px',
-                                padding: '6px 12px',
-                                backgroundColor: 'rgba(255,255,255,0.03)',
-                                borderRadius: '6px',
-                                border: '1px solid rgba(255,255,255,0.1)',
-                                textAlign: 'center',
-                                color: '#8A8A8A',
-                                fontSize: '11px',
-                                opacity: '0.6'
-                              }}>
-                                • Début des commentaires •
-                              </div>
-
-                              <div style={{ 
-                                display: 'flex',
-                                flexDirection: 'column',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                height: '200px',
-                                color: '#9CA3AF',
-                                textAlign: 'center'
-                              }}>
-                                <MessageCircle className="w-12 h-12 opacity-50" style={{ marginBottom: '16px' }} />
-                                <p style={{ marginBottom: '8px' }}>Aucun commentaire pour le moment</p>
-                                <p style={{ fontSize: '14px', opacity: '0.7' }}>Soyez le premier à commenter !</p>
-                              </div>
-
-                              {/* Indicateur de scroll - fin des commentaires - VERSION COMPACTE */}
-                              <div style={{ 
-                                marginTop: '12px',
-                                marginBottom: '20px',
-                                padding: '8px 12px',
-                                backgroundColor: 'rgba(255,255,255,0.05)',
-                                borderRadius: '8px',
-                                border: '1px solid rgba(255,255,255,0.1)',
-                                textAlign: 'center',
-                                color: '#8A8A8A',
-                                fontSize: '12px',
-                                opacity: '0.7'
-                              }}>
-                                • Fin des commentaires •
-                              </div>
-                            </>
-                          ) : (
-                            <>
-                              {/* Indicateur de scroll - premiers commentaires - VERSION COMPACTE */}
-                              <div
-                                style={{ 
-                                  marginBottom: '8px',
-                                  padding: '6px 12px',
-                                  backgroundColor: 'rgba(255,255,255,0.03)',
-                                  borderRadius: '6px',
-                                  border: '1px solid rgba(255,255,255,0.1)',
-                                  textAlign: 'center',
-                                  color: '#8A8A8A',
-                                  fontSize: '11px',
-                                  opacity: '0.6'
-                                }}>
-                                • Début des commentaires •
-                              </div>
-
-                              {mainComments.map((comment: any, index: number) => {
-                                const isOwner = comment.userId === user?.id;
-                                const replies = getRepliesForComment(comment.id);
-                                return (
-                                  <div key={comment.id} style={{ 
-                                    display: 'flex',
-                                    padding: '8px 4px',
-                                    borderBottom: '1px solid rgba(255,255,255,0.1)',
-                                    transition: 'background-color 0.2s',
-                                    marginBottom: '4px'
-                                  }}
-                                  onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#252525'}
-                                  onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                                  >
-                                    {/* Avatar */}
-                                    <div style={{ 
-                                      width: '32px',
-                                      height: '32px',
-                                      borderRadius: '50%',
-                                      marginRight: '12px',
-                                      flexShrink: 0,
-                                      background: 'linear-gradient(45deg, #ff6b6b, #4ecdc4)',
-                                      display: 'flex',
-                                      alignItems: 'center',
-                                      justifyContent: 'center',
-                                      fontWeight: 'bold',
-                                      color: 'white',
-                                      fontSize: '12px'
-                                    }}>
-                                      {(comment.user?.username || comment.username)?.charAt(0).toUpperCase() || '?'}
-                                    </div>
-
-                                    {/* Contenu du commentaire */}
-                                    <div style={{ flex: 1, minWidth: 0 }}>
-                                      <div style={{ 
-                                        display: 'flex', 
-                                        alignItems: 'center', 
-                                        marginBottom: '2px' 
-                                      }}>
-                                        <span style={{ 
-                                          fontWeight: '600',
-                                          color: '#ffffff',
-                                          marginRight: '8px',
-                                          fontSize: '13px'
-                                        }}>
-                                          {comment.user?.username || comment.username}
-                                        </span>
-                                      </div>
-
-                                      <div style={{ 
-                                        color: '#e0e0e0',
-                                        lineHeight: '1.3',
-                                        marginBottom: '6px',
-                                        fontSize: '14px',
-                                        wordWrap: 'break-word'
-                                      }}>
-                                        {comment.content}
-                                      </div>
-
-                                      <div style={{ 
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: '12px',
-                                        fontSize: '12px',
-                                        color: '#8A8A8A',
-                                        marginBottom: '4px'
-                                      }}>
-                                        <span style={{ color: '#8A8A8A' }}>
-                                          {formatDistanceToNow(new Date(comment.createdAt), { 
-                                            addSuffix: true, 
-                                            locale: fr 
-                                          })}
-                                        </span>
-                                        <button 
-                                          onClick={() => handleReplyToComment(comment)}
-                                          style={{ 
-                                            background: 'none',
-                                            border: 'none',
-                                            color: '#8A8A8A',
-                                            cursor: 'pointer',
-                                            fontSize: '12px',
-                                            transition: 'color 0.2s',
-                                            textDecoration: 'none'
-                                          }}
-                                          onMouseOver={(e) => (e.target as HTMLElement).style.color = '#ffffff'}
-                                          onMouseOut={(e) => (e.target as HTMLElement).style.color = '#8A8A8A'}
-                                        >
-                                          Répondre
-                                        </button>
-                                        {isOwner && (
-                                          <button 
-                                            onClick={() => handleDeleteComment(comment.id)}
-                                            style={{ 
-                                              background: 'none',
-                                              border: 'none',
-                                              color: '#EF4444',
-                                              cursor: 'pointer',
-                                              fontSize: '12px',
-                                              transition: 'color 0.2s',
-                                              textDecoration: 'none'
-                                            }}
-                                          >
-                                            Supprimer
-                                          </button>
-                                        )}
-                                      </div>
-
-                                      {/* Bouton pour ouvrir l'overlay des réponses */}
-                                      {replies.length > 0 && (
-                                        <button 
-                                          onClick={() => openRepliesOverlay(comment.id, comment)}
-                                          style={{ 
-                                            background: 'none',
-                                            border: 'none',
-                                            color: '#8A8A8A',
-                                            cursor: 'pointer',
-                                            fontSize: '12px',
-                                            transition: 'color 0.2s',
-                                            textDecoration: 'none',
-                                            display: 'block',
-                                            marginTop: '4px',
-                                            textAlign: 'left',
-                                            padding: '0'
-                                          }}
-                                          onMouseOver={(e) => (e.target as HTMLElement).style.color = '#ffffff'}
-                                          onMouseOut={(e) => (e.target as HTMLElement).style.color = '#8A8A8A'}
-                                        >
-                                          Voir les réponses ({replies.length})
-                                        </button>
-                                      )}
-                                    </div>
-
-                                    {/* Colonne droite avec like - Style exact du template */}
-                                    <div style={{ 
-                                      display: 'flex',
-                                      flexDirection: 'column',
-                                      alignItems: 'center',
-                                      gap: '2px',
-                                      marginLeft: '8px'
-                                    }}>
-                                      <button 
-                                        onClick={() => handleLikeComment(comment.id)}
-                                        style={{ 
-                                          background: 'none',
-                                          border: 'none',
-                                          color: isCommentLikedByUser(comment.id) ? '#ff6b6b' : '#8A8A8A',
-                                          cursor: 'pointer',
-                                          fontSize: '16px',
-                                          transition: 'color 0.2s',
-                                          padding: '4px'
-                                        }}
-                                        onMouseOver={(e) => (e.target as HTMLElement).style.color = '#ff6b6b'}
-                                        onMouseOut={(e) => (e.target as HTMLElement).style.color = isCommentLikedByUser(comment.id) ? '#ff6b6b' : '#8A8A8A'}
-                                      >
-                                        {isCommentLikedByUser(comment.id) ? '❤️' : '🤍'}
-                                      </button>
-                                      <span style={{ 
-                                        fontSize: '11px',
-                                        color: '#8A8A8A',
-                                        minWidth: '20px',
-                                        textAlign: 'center'
-                                      }}>
-                                        {getCommentLikesCount(comment.id)}
-                                      </span>
-                                    </div>
-                                  </div>
-                                );
-                              })}
-
-                            {/* Indicateur de scroll - fin des commentaires - VERSION COMPACTE */}
-                            <div style={{ 
-                              marginTop: '12px',
-                              marginBottom: '20px',
-                              padding: '8px 12px',
-                              backgroundColor: 'rgba(255,255,255,0.05)',
-                              borderRadius: '8px',
-                              border: '1px solid rgba(255,255,255,0.1)',
-                              textAlign: 'center',
-                              color: '#8A8A8A',
-                              fontSize: '12px',
-                              opacity: '0.7'
-                            }}>
-                              • Fin des commentaires •
-                            </div>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Comment Editor - Floating SMS-style overlay */}
-                  {showComments && (
-                    <div 
-                      className="comment-editor-overlay" 
-                      style={{ 
-                        position: 'fixed', 
-                        bottom: 0,
-                        left: 0,
-                        right: 0,
-                        backgroundColor: 'rgba(0,0,0,0.95)',
-                        borderTop: '1px solid rgba(255,255,255,0.1)',
-                        backdropFilter: 'blur(10px)',
-                        transition: 'all 0.3s ease-in-out',
-                        transform: isCommentEditorFocused || commentText.trim() || replyingTo ? 'translateY(0)' : 'translateY(0)',
-                        zIndex: 100000,
-                        paddingTop: isCommentEditorFocused || commentText.trim() || replyingTo ? '12px' : '8px',
-                        paddingLeft: '16px',
-                        paddingRight: '16px',
-                        paddingBottom: isCommentEditorFocused || commentText.trim() || replyingTo ? 'calc(16px + env(safe-area-inset-bottom))' : 'calc(8px + env(safe-area-inset-bottom))',
-                        minHeight: isCommentEditorFocused || commentText.trim() || replyingTo ? '100px' : '60px',
-                        touchAction: 'manipulation',
-                        WebkitTouchCallout: 'none',
-                        overscrollBehavior: 'none',
-                        isolation: 'isolate'
-                      }}
-                    >
-                      {/* Reply indicator - shown above input when replying */}
-                      {replyingTo && (
-                        <div style={{ 
-                          display: 'flex', 
-                          alignItems: 'center', 
-                          gap: '8px',
-                          marginBottom: '12px',
-                          padding: '8px 12px',
-                          backgroundColor: 'rgba(255,255,255,0.05)',
-                          borderRadius: '8px',
-                          fontSize: '12px',
-                          color: '#9CA3AF',
-                          opacity: 1,
-                          transform: 'translateY(0)',
-                          transition: 'all 0.3s ease'
-                        }}>
-                          <span>Répondre à {replyingTo.username}</span>
-                          <button
-                            onClick={() => {
-                              setReplyingTo(null);
-                              setCommentText('');
-                            }}
-                            style={{
-                              background: 'none',
-                              border: 'none',
-                              color: '#9CA3AF',
-                              cursor: 'pointer',
-                              padding: '2px'
-                            }}
-                          >
-                            <X className="w-3 h-3" />
-                          </button>
-                        </div>
-                      )}
-
-                      <div style={{ 
-                        display: 'flex', 
-                        alignItems: 'flex-end', 
-                        gap: '12px',
-                        backgroundColor: 'rgba(255,255,255,0.08)',
-                        borderRadius: '20px',
-                        padding: '8px 16px',
-                        border: '1px solid rgba(255,255,255,0.1)',
-                        minHeight: '44px',
-                        transition: 'all 0.3s ease'
-                      }}>
-                        {/* Text Input */}
-                        <div style={{ flex: 1 }}>
-                          <textarea
-                            value={commentText}
-                            onChange={(e) => setCommentText(e.target.value)}
-                            placeholder={replyingTo ? `Répondre à ${replyingTo.username}...` : 'Commenter...'}
-                            style={{
-                              width: '100%',
-                              background: 'transparent',
-                              border: 'none',
-                              outline: 'none',
-                              color: 'white',
-                              fontSize: '14px',
-                              resize: 'none',
-                              minHeight: '20px',
-                              maxHeight: isCommentEditorFocused || commentText.trim() ? '120px' : '20px',
-                              paddingTop: '2px',
-                              paddingBottom: '2px',
-                              fontFamily: 'inherit',
-                              lineHeight: '1.4',
-                              transition: 'max-height 0.3s ease',
-                              overflowY: 'auto'
-                            }}
-                            onKeyPress={(e) => {
-                              if (e.key === 'Enter' && !e.shiftKey) {
-                                e.preventDefault();
-                                handleCommentSubmit();
-                              }
-                            }}
-                            onFocus={() => {
-                              setIsCommentEditorFocused(true);
-                            }}
-                            onBlur={() => {
-                              setTimeout(() => setIsCommentEditorFocused(false), 150);
-                            }}
-                          />
-                        </div>
-
-                        {/* Action Buttons - Always show send button, formatting buttons only when active */}
-                        <div style={{ 
-                          display: 'flex', 
-                          alignItems: 'center', 
-                          gap: '8px',
-                          marginLeft: '8px'
-                        }}>
-                          {/* Formatting Buttons - Only show when focused or has content */}
-                          {(isCommentEditorFocused || commentText.trim()) && (
-                            <div style={{ 
-                              display: 'flex', 
-                              gap: '4px',
-                              borderRight: '1px solid rgba(255,255,255,0.2)',
-                              paddingRight: '8px',
-                              opacity: 1,
-                              transform: 'translateX(0)',
-                              transition: 'all 0.3s ease'
-                            }}>
-                              <button 
-                                type="button"
-                                style={{
-                                  background: 'none',
-                                  border: 'none',
-                                  color: '#9CA3AF',
-                                  fontSize: '12px',
-                                  fontWeight: 'bold',
-                                  cursor: 'pointer',
-                                  padding: '4px 6px',
-                                  borderRadius: '4px',
-                                  minWidth: '24px',
-                                  height: '24px',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center'
-                                }}
-                              >
-                                B
-                              </button>
-                              <button 
-                                type="button"
-                                style={{
-                                  background: 'none',
-                                  border: 'none',
-                                  color: '#9CA3AF',
-                                  fontSize: '12px',
-                                  fontStyle: 'italic',
-                                  cursor: 'pointer',
-                                  padding: '4px 6px',
-                                  borderRadius: '4px',
-                                  minWidth: '24px',
-                                  height: '24px',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center'
-                                }}
-                              >
-                                I
-                              </button>
-                              <button 
-                                type="button"
-                                style={{
-                                  background: 'none',
-                                  border: 'none',
-                                  color: '#9CA3AF',
-                                  fontSize: '12px',
-                                  cursor: 'pointer',
-                                  padding: '4px 6px',
-                                  borderRadius: '4px',
-                                  minWidth: '24px',
-                                  height: '24px',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center'
-                                }}
-                              >
-                                😊
-                              </button>
-                            </div>
-                          )}
-
-                          {/* Send Button - Always visible */}
-                          <button
-                            onClick={handleCommentSubmit}
-                            disabled={!commentText.trim() || interactMutation.isPending}
-                            style={{
-                              background: commentText.trim() ? '#3B82F6' : 'rgba(255,255,255,0.1)',
-                              border: 'none',
-                              borderRadius: '50%',
-                              width: '32px',
-                              height: '32px',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              cursor: commentText.trim() ? 'pointer' : 'not-allowed',
-                              transition: 'all 0.2s ease',
-                              color: 'white',
-                              transform: 'rotate(0deg)'
-                            }}
-                          >
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                              <path d="M3 12L21 3L12 21L9 12L3 12Z" fill="currentColor"/>
-                            </svg>
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Overlay des réponses */}
-                  {repliesOverlay.isVisible && repliesOverlay.commentId && (
-                    <div style={{
-                      position: 'fixed',
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      backgroundColor: 'rgba(0, 0, 0, 0.95)',
-                      zIndex: 999999,
-                      display: 'flex',
-                      flexDirection: 'column',
-                      overflow: 'hidden',
-                      touchAction: 'manipulation',
-                      WebkitTouchCallout: 'none',
-                      WebkitUserSelect: 'none',
-                      userSelect: 'none'
-                    }}>
-                      {/* Header de l'overlay */}
-                      <div style={{
-                        padding: '16px 20px',
-                        borderBottom: '1px solid #2a2a2a',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        backgroundColor: '#1a1a1a',
-                        position: 'sticky',
-                        top: 0
-                      }}>
-                        <div style={{ 
-                          display: 'flex', 
-                          alignItems: 'center',
-                          gap: '12px'
-                        }}>
-                          <button 
-                            onClick={closeRepliesOverlay}
-                            style={{
-                              background: 'rgba(255,255,255,0.1)',
-                              border: '1px solid rgba(255,255,255,0.2)',
-                              borderRadius: '8px',
-                              color: 'white',
-                              cursor: 'pointer',
-                              padding: '8px',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              marginRight: '8px'
-                            }}
-                          >
-                            <ArrowLeft className="w-4 h-4" />
-                          </button>
-                          <div style={{ 
-                            width: '32px',
-                            height: '32px',
-                            borderRadius: '50%',
-                            background: 'linear-gradient(45deg, #ff6b6b, #4ecdc4)',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontWeight: 'bold',
-                            color: 'white',
-                            fontSize: '12px'
-                          }}>
-                            {(repliesOverlay.parentComment?.user?.username || repliesOverlay.parentComment?.username)?.charAt(0).toUpperCase() || '?'}
-                          </div>
-                          <div>
-                            <div style={{ 
-                              color: '#ffffff',
-                              fontSize: '16px',
-                              fontWeight: '600'
-                            }}>
-                              Réponses à {repliesOverlay.parentComment?.user?.username || repliesOverlay.parentComment?.username}
-                            </div>
-                            <div style={{ 
-                              color: '#8A8A8A',
-                              fontSize: '12px'
-                            }}>
-                              {getRepliesForComment(repliesOverlay.commentId).length} réponse{getRepliesForComment(repliesOverlay.commentId).length > 1 ? 's' : ''}
-                            </div>
-                          </div>
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <span style={{ 
-                            color: 'rgba(255,255,255,0.6)', 
-                            fontSize: '12px',
-                            fontWeight: '500'
-                          }}>
-                            Appuyez sur Échap pour fermer
-                          </span>
-                          <button 
-                            onClick={closeRepliesOverlay}
-                            style={{
-                              background: 'rgba(255,255,255,0.1)',
-                              border: '1px solid rgba(255,255,255,0.2)',
-                              borderRadius: '8px',
-                              color: 'white',
-                              cursor: 'pointer',
-                              padding: '8px',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center'
-                            }}
-                          >
-                            <X className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Commentaire parent */}
-                      <div style={{
-                        padding: '20px',
-                        borderBottom: '1px solid #2a2a2a',
-                        backgroundColor: '#1a1a1a'
-                      }}>
-                        <div style={{ 
-                          display: 'flex',
-                          alignItems: 'flex-start',
-                          gap: '12px'
-                        }}>
-                          <div style={{ 
-                            width: '40px',
-                            height: '40px',
-                            borderRadius: '50%',
-                            background: 'linear-gradient(45deg, #ff6b6b, #4ecdc4)',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontWeight: 'bold',
-                            color: 'white',
-                            fontSize: '14px'
-                          }}>
-                            {(repliesOverlay.parentComment?.user?.username || repliesOverlay.parentComment?.username)?.charAt(0).toUpperCase() || '?'}
-                          </div>
-                          <div style={{ flex: 1 }}>
-                            <div style={{ 
-                              color: '#ffffff',
-                              fontSize: '14px',
-                              fontWeight: '600',
-                              marginBottom: '4px'
-                            }}>
-                              {repliesOverlay.parentComment?.user?.username || repliesOverlay.parentComment?.username}
-                            </div>
-                            <div style={{ 
-                              color: '#e0e0e0',
-                              fontSize: '14px',
-                              lineHeight: '1.4',
-                              marginBottom: '8px'
-                            }}>
-                              {repliesOverlay.parentComment?.content}
-                            </div>
-                            <div style={{ 
-                              color: '#8A8A8A',
-                              fontSize: '12px'
-                            }}>
-                              {formatDistanceToNow(new Date(repliesOverlay.parentComment?.createdAt), { 
-                                addSuffix: true, 
-                                locale: fr 
-                              })}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Liste des réponses */}
-                      <div style={{
-                        flex: 1,
-                        overflowY: 'auto',
-                        padding: '0'
-                      }}>
-                        {getOrganizedReplies(repliesOverlay.commentId).map((reply: any) => {
-                          const isReplyOwner = reply.userId === user?.id;
-
-                          // Déterminer si c'est une réponse directe ou une réponse à une réponse
-                          const tagMatch = reply.content.match(/^@(\w+)/);
-                          const parentComment = repliesOverlay.parentComment;
-                          const parentUsername = parentComment?.user?.username || parentComment?.username;
-                          const isDirectReply = tagMatch && tagMatch[1] === parentUsername;
-
-                          return (
-                            <div key={reply.id} style={{ 
-                              display: 'flex',
-                              padding: '16px 20px',
-                              paddingLeft: isDirectReply ? '20px' : '40px', // Indentation pour les réponses aux réponses
-                              borderBottom: '1px solid #2a2a2a',
-                              transition: 'background-color 0.2s',
-                              backgroundColor: isDirectReply ? 'transparent' : '#1a1a1a' // Fond légèrement différent
-                            }}
-                            onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#252525'}
-                            onMouseOut={(e) => e.currentTarget.style.backgroundColor = isDirectReply ? 'transparent' : '#1a1a1a'}
-                            >
-                              {/* Avatar réponse */}
-                              <div style={{ 
-                                width: '32px',
-                                height: '32px',
-                                borderRadius: '50%',
-                                marginRight: '12px',
-                                flexShrink: 0,
-                                background: 'linear-gradient(45deg, #ff6b6b, #4ecdc4)',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                fontWeight: 'bold',
-                                color: 'white',
-                                fontSize: '12px'
-                              }}>
-                                {(reply.user?.username || reply.username)?.charAt(0).toUpperCase() || '?'}
-                              </div>
-
-                              {/* Contenu réponse */}
-                              <div style={{ flex: 1, minWidth: 0 }}>
-                                <div style={{ 
-                                  display: 'flex', 
-                                  alignItems: 'center', 
-                                  marginBottom: '4px' 
-                                }}>
-                                  <span style={{ 
-                                    fontWeight: '600',
-                                    color: '#ffffff',
-                                    marginRight: '8px',
-                                    fontSize: '14px'
-                                  }}>
-                                    {reply.user?.username || reply.username}
-                                  </span>
-                                  <span style={{ 
-                                    color: '#8A8A8A',
-                                    fontSize: '12px'
-                                  }}>
-                                    {formatDistanceToNow(new Date(reply.createdAt), { 
-                                      addSuffix: true, 
-                                      locale: fr 
-                                    })}
-                                  </span>
-                                </div>
-
-                                <div style={{ 
-                                  color: '#e0e0e0',
-                                  lineHeight: '1.4',
-                                  marginBottom: '8px',
-                                  fontSize: '14px',
-                                  wordWrap: 'break-word'
-                                }}>
-                                  {reply.content}
-                                </div>
-
-                                <div style={{ 
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  gap: '12px',
-                                  fontSize: '12px',
-                                  color: '#8A8A8A'
-                                }}>
-                                  <button 
-                                    onClick={() => {
-                                      // Répondre à la réponse spécifique, pas au commentaire parent
-                                      const replyUsername = reply.user?.username || reply.username;
-                                      setReplyingTo({ commentId: repliesOverlay.commentId!, username: replyUsername });
-                                      setCommentText(`@${replyUsername} `);
-                                      // Ne pas fermer l'overlay pour rester dans la section des réponses
-                                    }}
-                                    style={{ 
-                                      background: 'none',
-                                      border: 'none',
-                                      color: '#8A8A8A',
-                                      cursor: 'pointer',
-                                      fontSize: '12px',
-                                      transition: 'color 0.2s',
-                                      textDecoration: 'none'
-                                    }}
-                                    onMouseOver={(e) => (e.target as HTMLElement).style.color = '#ffffff'}
-                                    onMouseOut={(e) => (e.target as HTMLElement).style.color = '#8A8A8A'}
-                                  >
-                                    Répondre
-                                  </button>
-
-                                  {/* Bouton de like pour les réponses */}
-                                  <div style={{ 
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    alignItems: 'center',
-                                    gap: '2px'
-                                  }}>
-                                    <button 
-                                      onClick={() => handleLikeComment(reply.id)}
-                                      style={{ 
-                                        background: 'none',
-                                        border: 'none',
-                                        color: isCommentLikedByUser(reply.id) ? '#ff6b6b' : '#8A8A8A',
-                                        cursor: 'pointer',
-                                        fontSize: '14px',
-                                        transition: 'color 0.2s',
-                                        padding: '2px'
-                                      }}
-                                      onMouseOver={(e) => (e.target as HTMLElement).style.color = '#ff6b6b'}
-                                      onMouseOut={(e) => (e.target as HTMLElement).style.color = isCommentLikedByUser(reply.id) ? '#ff6b6b' : '#8A8A8A'}
-                                    >
-                                      {isCommentLikedByUser(reply.id) ? '❤️' : '🤍'}
-                                    </button>
-                                    <span style={{ 
-                                      fontSize: '10px',
-                                      color: '#8A8A8A',
-                                      minWidth: '16px',
-                                      textAlign: 'center'
-                                    }}>
-                                      {getCommentLikesCount(reply.id)}
-                                    </span>
-                                  </div>
-                                  {isReplyOwner && (
-                                    <button 
-                                      onClick={() => handleDeleteComment(reply.id)}
-                                      style={{ 
-                                        background: 'none',
-                                        border: 'none',
-                                        color: '#EF4444',
-                                        cursor: 'pointer',
-                                        fontSize: '12px',
-                                        transition: 'color 0.2s',
-                                        textDecoration: 'none'
-                                      }}
-                                    >
-                                      Supprimer
-                                    </button>
-                                  )}
-                                </div>
-                              </div>
-
-                              {/* Colonne droite réponse avec like */}
-                              <div style={{ 
-                                display: 'flex',
-                                flexDirection: 'column',
-                                alignItems: 'center',
-                                gap: '2px',
-                                marginLeft: '8px'
-                              }}>
-                                <button 
-                                  onClick={() => handleLikeComment(reply.id)}
-                                  style={{ 
-                                    background: 'none',
-                                    border: 'none',
-                                    color: '#8A8A8A',
-                                    cursor: 'pointer',
-                                    fontSize: '16px',
-                                    transition: 'color 0.2s',
-                                    padding: '4px'
-                                  }}
-                                  onMouseOver={(e) => (e.target as HTMLElement).style.color = '#ff6b6b'}
-                                  onMouseOut={(e) => (e.target as HTMLElement).style.color = '#8A8A8A'}
-                                >
-                                  🤍
-                                </button>
-                                <span style={{ 
-                                  fontSize: '11px',
-                                  color: '#8A8A8A',
-                                  minWidth: '20px',
-                                  textAlign: 'center'
-                                }}>
-                                  {reply.likesCount || 0}
-                                </span>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-
-                      {/* Zone de réponse dans l'overlay */}
-                      <div style={{
-                        padding: '16px 20px',
-                        borderTop: '1px solid #2a2a2a',
-                        backgroundColor: '#1a1a1a'
-                      }}>
-                        <div style={{ 
-                          display: 'flex', 
-                          alignItems: 'flex-end', 
-                          gap: '12px',
-                          backgroundColor: 'rgba(255,255,255,0.08)',
-                          borderRadius: '20px',
-                          padding: '8px 16px',
-                          border: '1px solid rgba(255,255,255,0.1)'
-                        }}>
-                          <div style={{ flex: 1 }}>
-                            <textarea
-                              value={commentText}
-                              onChange={(e) => setCommentText(e.target.value)}
-                              placeholder={replyingTo ? `Répondre à ${replyingTo.username}...` : `Répondre à ${repliesOverlay.parentComment?.user?.username || repliesOverlay.parentComment?.username}...`}
-                              style={{
-                                width: '100%',
-                                background: 'transparent',
-                                border: 'none',
-                                outline: 'none',
-                                color: 'white',
-                                fontSize: '14px',
-                                resize: 'none',
-                                minHeight: '20px',
-                                maxHeight: '120px',
-                                paddingTop: '2px',
-                                paddingBottom: '2px',
-                                fontFamily: 'inherit',
-                                lineHeight: '1.4',
-                                overflowY: 'auto'
-                              }}
-                              onKeyPress={(e) => {
-                                if (e.key === 'Enter' && !e.shiftKey) {
-                                  e.preventDefault();
-                                  handleCommentSubmit();
-                                }
-                              }}
-                            />
-                          </div>
-                          <button 
-                            onClick={handleCommentSubmit}
-                            disabled={!commentText.trim()}
-                            style={{
-                              background: commentText.trim() ? 'var(--emotion-color)' : 'rgba(255,255,255,0.2)',
-                              border: 'none',
-                              borderRadius: '50%',
-                              width: '32px',
-                              height: '32px',
-                              cursor: commentText.trim() ? 'pointer' : 'not-allowed',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              fontSize: '16px',
-                              color: 'white',
-                              transition: 'all 0.2s'
-                            }}
-                          >
-                            ↗
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Boîte de confirmation de suppression */}
-                  {deleteConfirmation.show && (
-                    <div style={{
-                      position: 'fixed',
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      zIndex: 999999,
-                      padding: '20px',
-                      touchAction: 'manipulation',
-                      WebkitTouchCallout: 'none'
-                    }}>
-                      <div style={{
-                        backgroundColor: '#1a1a1a',
-                        borderRadius: '16px',
-                        padding: '24px',
-                        maxWidth: '400px',
-                        width: '100%',
-                        border: '1px solid #333333',
-                        boxShadow: '0 20px 40px rgba(0, 0, 0, 0.5)'
-                      }}>
-                        <div style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          marginBottom: '16px'
-                        }}>
-                          <div style={{
-                            backgroundColor: '#EF4444',
-                            borderRadius: '50%',
-                            width: '40px',
-                            height: '40px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            marginRight: '12px'
-                          }}>
-                            <Trash2 size={20} color="white" />
-                          </div>
-                          <div>
-                            <h3 style={{
-                              color: 'white',
-                              fontSize: '18px',
-                              fontWeight: '600',
-                              margin: '0 0 4px 0'
-                            }}>
-                              Supprimer le commentaire
-                            </h3>
-                            <p style={{
-                              color: '#8A8A8A',
-                              fontSize: '14px',
-                              margin: '0'
-                            }}>
-                              Cette action est irréversible
-                            </p>
-                          </div>
-                        </div>
-
-                        <div style={{
-                          backgroundColor: '#2a2a2a',
-                          borderRadius: '8px',
-                          padding: '12px',
-                          marginBottom: '20px',
-                          border: '1px solid #333333'
-                        }}>
-                          <p style={{
-                            color: '#e0e0e0',
-                            fontSize: '14px',
-                            margin: '0',
-                            fontStyle: 'italic',
-                            lineHeight: '1.4'
-                          }}>
-                            "{deleteConfirmation.commentContent.length > 100 
-                              ? deleteConfirmation.commentContent.substring(0, 100) + '...' 
-                              : deleteConfirmation.commentContent}"
-                          </p>
-                        </div>
-
-                        <div style={{
-                          display: 'flex',
-                          gap: '12px',
-                          justifyContent: 'flex-end'
-                        }}>
-                          <button
-                            onClick={cancelDeleteComment}
-                            style={{
-                              backgroundColor: 'transparent',
-                              border: '1px solid #333333',
-                              color: '#ffffff',
-                              padding: '10px 20px',
-                              borderRadius: '8px',
-                              cursor: 'pointer',
-                              fontSize: '14px',
-                              fontWeight: '500',
-                              transition: 'all 0.2s'
-                            }}
-                            onMouseOver={(e) => {
-                              e.currentTarget.style.backgroundColor = '#333333';
-                            }}
-                            onMouseOut={(e) => {
-                              e.currentTarget.style.backgroundColor = 'transparent';
-                            }}
-                          >
-                            Annuler
-                          </button>
-                          <button
-                            onClick={confirmDeleteComment}
-                            style={{
-                              backgroundColor: '#EF4444',
-                              border: 'none',
-                              color: 'white',
-                              padding: '10px 20px',
-                              borderRadius: '8px',
-                              cursor: 'pointer',
-                              fontSize: '14px',
-                              fontWeight: '500',
-                              transition: 'all 0.2s'
-                            }}
-                            onMouseOver={(e) => {
-                              e.currentTarget.style.backgroundColor = '#DC2626';
-                            }}
-                            onMouseOut={(e) => {
-                              e.currentTarget.style.backgroundColor = '#EF4444';
-                            }}
-                          >
-                            Supprimer
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          );
-        }
-
-        export default GbairaiCardMobile;
+                    className="w-full h-full bg-gradient-to-br from-slate-900 via-gray-

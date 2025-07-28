@@ -7,29 +7,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { LocationSearch } from "./LocationSearch";
 
 interface GbairaiFiltersProps {
-  onFilterChange: (filters: {
-    region?: string;
-    followingOnly?: boolean;
-    emotion?: string;
-    location?: {
-      city?: string;
-      region?: string;
-      latitude?: number;
-      longitude?: number;
-    };
-  }) => void;
-  currentFilters: {
-    region?: string;
-    followingOnly?: boolean;
-    emotion?: string;
-    location?: {
-      city?: string;
-      region?: string;
-      latitude?: number;
-      longitude?: number;
-    };
-  };
-  hideWhenCommentsOpen?: boolean;
+  onFilterChange: (filters: any) => void;
+  currentFilters: any;
+  isGuest?: boolean;
+  onAuthRequired?: () => void;
 }
 
 // Régions de Côte d'Ivoire
@@ -60,7 +41,12 @@ const EMOTIONS = [
   { value: "inclassable", label: "🎨 Inclassable" }
 ];
 
-export function GbairaiFilters({ onFilterChange, currentFilters, hideWhenCommentsOpen = false }: GbairaiFiltersProps) {
+export function GbairaiFilters({ 
+  onFilterChange, 
+  currentFilters,
+  isGuest = false,
+  onAuthRequired
+}: GbairaiFiltersProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
   const updateFilter = (key: string, value: any) => {
@@ -85,6 +71,19 @@ export function GbairaiFilters({ onFilterChange, currentFilters, hideWhenComment
   if (hideWhenCommentsOpen) {
     return null;
   }
+
+  const handleFollowingToggle = () => {
+    if (isGuest) {
+      onAuthRequired?.();
+      return;
+    }
+
+    const newFollowingOnly = !currentFilters.followingOnly;
+    onFilterChange({
+      ...currentFilters,
+      followingOnly: newFollowingOnly
+    });
+  };
 
   return (
     <div className="mb-6 mt-8">
@@ -151,7 +150,13 @@ export function GbairaiFilters({ onFilterChange, currentFilters, hideWhenComment
               </label>
               <Select
                 value={currentFilters.followingOnly ? "true" : "false"}
-                onValueChange={(value) => updateFilter("followingOnly", value === "true")}
+                onValueChange={(value) => {
+                   if (isGuest) {
+                    onAuthRequired?.();
+                    return;
+                  }
+                  updateFilter("followingOnly", value === "true")
+                }}
               >
                 <SelectTrigger className="bg-yellow-50 dark:bg-gray-700 border-yellow-300 dark:border-gray-600 text-yellow-800 dark:text-white">
                   <SelectValue />

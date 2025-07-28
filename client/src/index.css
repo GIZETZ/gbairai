@@ -688,7 +688,39 @@ body {
 
   /* Mobile navigation styles */
   .mobile-nav-hide-on-keyboard {
-    transition: transform 0.2s ease-in-out, opacity 0.2s ease-in-out;);
+    transition: transform 0.2s ease-in-out, opacity 0.2s ease-in-out;
+  }
+
+  /* Force hide mobile navigation when comments are open */
+  .comments-overlay ~ .mobile-nav-hide-on-keyboard,
+  .comment-form-overlay ~ .mobile-nav-hide-on-keyboard {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    transform: translateY(100%) !important;
+    pointer-events: none !important;
+  }
+
+  /* Additional safety for mobile keyboard scenarios */
+  @media (max-width: 768px) {
+    /* When virtual keyboard is detected, force hide navigation */
+    @supports (height: 100dvh) {
+      .mobile-nav-hide-on-keyboard {
+        bottom: 0;
+      }
+      
+      /* Force hide when viewport height is significantly reduced */
+      @media (max-height: 500px) and (orientation: portrait),
+             (max-height: 400px) and (orientation: landscape) {
+        .mobile-nav-hide-on-keyboard {
+          display: none !important;
+          visibility: hidden !important;
+          opacity: 0 !important;
+          transform: translateY(100%) !important;
+          pointer-events: none !important;
+        }
+      }
+    }
   }
 }
 

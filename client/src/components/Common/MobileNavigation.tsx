@@ -14,31 +14,63 @@ export function MobileNavigation({ hideWhenCommentsOpen }: MobileNavigationProps
   const { theme } = useTheme();
   const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
 
-  // Détecter l'ouverture du clavier virtuel
+  // Détecter l'ouverture du clavier virtuel avec une approche plus robuste
   useEffect(() => {
-    const initialViewportHeight = window.visualViewport?.height || window.innerHeight;
-    
+    let initialViewportHeight = window.visualViewport?.height || window.innerHeight;
+    let timeoutId: NodeJS.Timeout;
+
     const handleViewportChange = () => {
+      // Réinitialiser la hauteur de référence si nécessaire
       const currentHeight = window.visualViewport?.height || window.innerHeight;
       const heightDifference = initialViewportHeight - currentHeight;
       
-      // Si la hauteur a diminué de plus de 150px, considérer que le clavier est ouvert
-      setIsKeyboardOpen(heightDifference > 150);
+      // Délai pour éviter les faux positifs lors du redimensionnement
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        // Si la hauteur a diminué de plus de 100px, considérer que le clavier est ouvert
+        setIsKeyboardOpen(heightDifference > 100);
+      }, 100);
+    };
+
+    const handleFocusIn = (e: FocusEvent) => {
+      // Si un élément de saisie reçoit le focus, considérer que le clavier va s'ouvrir
+      const target = e.target as HTMLElement;
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')) {
+        setTimeout(() => setIsKeyboardOpen(true), 300);
+      }
+    };
+
+    const handleFocusOut = () => {
+      // Délai avant de considérer que le clavier est fermé
+      setTimeout(() => {
+        const currentHeight = window.visualViewport?.height || window.innerHeight;
+        const heightDifference = initialViewportHeight - currentHeight;
+        setIsKeyboardOpen(heightDifference > 100);
+      }, 300);
     };
 
     // Utiliser visualViewport si disponible (plus précis sur mobile)
     if (window.visualViewport) {
       window.visualViewport.addEventListener('resize', handleViewportChange);
-      return () => {
-        window.visualViewport?.removeEventListener('resize', handleViewportChange);
-      };
     } else {
       // Fallback pour les navigateurs plus anciens
       window.addEventListener('resize', handleViewportChange);
-      return () => {
-        window.removeEventListener('resize', handleViewportChange);
-      };
     }
+
+    // Écouter les événements de focus pour détecter l'ouverture/fermeture du clavier
+    document.addEventListener('focusin', handleFocusIn);
+    document.addEventListener('focusout', handleFocusOut);
+
+    return () => {
+      clearTimeout(timeoutId);
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener('resize', handleViewportChange);
+      } else {
+        window.removeEventListener('resize', handleViewportChange);
+      }
+      document.removeEventListener('focusin', handleFocusIn);
+      document.removeEventListener('focusout', handleFocusOut);
+    };
   }, []);
 
   // Ne pas afficher la navigation si hideWhenCommentsOpen est true OU si le clavier est ouvert

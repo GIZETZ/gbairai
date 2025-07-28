@@ -59,17 +59,4 @@ export function setupHealthCheck(app: Express) {
       });
     }
   });
-      }
-
-      res.status(200).json(healthStatus);
-    } catch (error) {
-      console.error('Health check error:', error);
-      res.status(500).json({
-        status: 'ERROR',
-        timestamp: new Date().toISOString(),
-        error: 'Internal server error during health check'
-      });
-    }
-  });
 }
-

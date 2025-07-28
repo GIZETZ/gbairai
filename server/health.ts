@@ -55,4 +55,3 @@ export function setupHealthCheck(app: Express) {
   });
 }
 
-export const healthCheck = setupHealthCheck;

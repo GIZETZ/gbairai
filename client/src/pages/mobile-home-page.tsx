@@ -1,3 +1,4 @@
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { MobileLayout } from "@/components/Common/MobileLayout";
 import { GbairaiCardMobile } from "@/components/Gbairai/GbairaiCardMobile";
 import { GbairaiFilters } from "@/components/Common/GbairaiFilters";
@@ -11,16 +12,17 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { notificationsApi } from "@/services/api";
 import { useAuth } from "@/hooks/use-auth";
-import { useState, useEffect, useMemo, useRef } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { InteractiveMap } from "@/components/Map/InteractiveMap";
-import { GbairaiForm } from "@/components/Gbairai/GbairaiForm";
 
 export default function MobileHomePage() {
+  console.log('MobileHomePage: Composant chargé');
+  
   const { user, isLoading: authLoading } = useAuth();
   const [showAuthDialog, setShowAuthDialog] = useState(false);
+  
+  console.log('MobileHomePage: user =', user, 'authLoading =', authLoading);
 
   // Charger les filtres depuis localStorage au démarrage
   const loadFiltersFromStorage = () => {

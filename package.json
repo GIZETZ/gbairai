@@ -8,7 +8,7 @@
     "build": "npm run build:client && npm run build:server",
     "build:client": "cd client && npm run build",
     "build:server": "tsc --project tsconfig.server.json",
-    "start": "NODE_ENV=production PORT=10000 node dist/server/index.js"
+    "start": "NODE_ENV=production PORT=10000 tsx server/index.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

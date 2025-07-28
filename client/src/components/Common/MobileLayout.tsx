@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import React, { ReactNode, useState, useEffect } from "react";
 import { MobileNavigation } from "./MobileNavigation";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,28 @@ interface MobileLayoutProps {
 
 export function MobileLayout({ children, className, showTopButtons = true }: MobileLayoutProps) {
   const { user } = useAuth();
+  const [isNavVisible, setIsNavVisible] = useState(true);
+
+  // Fonction globale pour contrôler la navigation
+  React.useEffect(() => {
+    (window as any).toggleMobileNavigation = () => {
+      setIsNavVisible(prev => !prev);
+    };
+
+    (window as any).hideMobileNavigation = () => {
+      setIsNavVisible(false);
+    };
+
+    (window as any).showMobileNavigation = () => {
+      setIsNavVisible(true);
+    };
+
+    return () => {
+      delete (window as any).toggleMobileNavigation;
+      delete (window as any).hideMobileNavigation;
+      delete (window as any).showMobileNavigation;
+    };
+  }, []);
 
   // Récupérer les notifications
   const { data: notifications = [] } = useQuery({
@@ -70,7 +92,12 @@ export function MobileLayout({ children, className, showTopButtons = true }: Mob
       </div>
 
       {/* Bottom Navigation */}
-      <MobileNavigation />
+      <div className={cn(
+        "fixed bottom-0 left-0 right-0 z-50 transition-transform duration-300",
+        isNavVisible ? "translate-y-0" : "translate-y-full"
+      )}>
+        <MobileNavigation />
+      </div>
     </div>
   );
 }

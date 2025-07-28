@@ -3,6 +3,7 @@ import { MapPin, MessageSquare, Search, User, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/hooks/useTheme";
+import { useState, useEffect } from "react";
 
 interface MobileNavigationProps {
   hideWhenCommentsOpen?: boolean;
@@ -11,9 +12,37 @@ interface MobileNavigationProps {
 export function MobileNavigation({ hideWhenCommentsOpen }: MobileNavigationProps) {
   const [location] = useLocation();
   const { theme } = useTheme();
+  const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
 
-  // Ne pas afficher la navigation si hideWhenCommentsOpen est true
-  if (hideWhenCommentsOpen) {
+  // Détecter l'ouverture du clavier virtuel
+  useEffect(() => {
+    const initialViewportHeight = window.visualViewport?.height || window.innerHeight;
+    
+    const handleViewportChange = () => {
+      const currentHeight = window.visualViewport?.height || window.innerHeight;
+      const heightDifference = initialViewportHeight - currentHeight;
+      
+      // Si la hauteur a diminué de plus de 150px, considérer que le clavier est ouvert
+      setIsKeyboardOpen(heightDifference > 150);
+    };
+
+    // Utiliser visualViewport si disponible (plus précis sur mobile)
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', handleViewportChange);
+      return () => {
+        window.visualViewport?.removeEventListener('resize', handleViewportChange);
+      };
+    } else {
+      // Fallback pour les navigateurs plus anciens
+      window.addEventListener('resize', handleViewportChange);
+      return () => {
+        window.removeEventListener('resize', handleViewportChange);
+      };
+    }
+  }, []);
+
+  // Ne pas afficher la navigation si hideWhenCommentsOpen est true OU si le clavier est ouvert
+  if (hideWhenCommentsOpen || isKeyboardOpen) {
     return null;
   }
 

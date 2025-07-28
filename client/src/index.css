@@ -686,26 +686,9 @@ body {
     font-size: 16px; /* Prevent zoom on iOS */
   }
 
-  /* Hide mobile navigation when keyboard is visible */
+  /* Mobile navigation styles */
   .mobile-nav-hide-on-keyboard {
-    transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
-  }
-
-  /* When virtual keyboard is open, hide the navigation */
-  @supports (height: 100dvh) {
-    @media (max-height: 500px) and (orientation: portrait), 
-           (max-height: 400px) and (orientation: landscape) {
-      .mobile-nav-hide-on-keyboard {
-        transform: translateY(100%);
-        opacity: 0;
-        pointer-events: none;
-      }
-    }
-  }
-
-  /* Alternative method using viewport height detection */
-  .mobile-nav-hide-on-keyboard {
-    bottom: max(0px, env(keyboard-inset-height, 0px));
+    transition: transform 0.2s ease-in-out, opacity 0.2s ease-in-out;);
   }
 }
 

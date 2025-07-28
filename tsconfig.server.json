@@ -1,6 +1,5 @@
 
 {
-  "extends": "./tsconfig.json",
   "compilerOptions": {
     "outDir": "./dist",
     "rootDir": "./",
@@ -12,11 +11,18 @@
     "skipLibCheck": true,
     "declaration": false,
     "sourceMap": false,
-    "types": ["node"]
+    "types": ["node"],
+    "strict": true,
+    "noImplicitAny": false,
+    "allowJs": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": false
   },
   "include": [
     "server/**/*",
-    "shared/**/*"
+    "shared/**/*",
+    "server/types/**/*"
   ],
   "exclude": [
     "node_modules",

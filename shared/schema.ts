@@ -89,7 +89,7 @@ export const reports = pgTable("reports", {
   targetId: integer("target_id").notNull(), // ID de l'élément signalé
   reason: text("reason").notNull(),
   status: varchar("status", { length: 20 }).default("pending").notNull(), // 'pending', 'approved', 'rejected'
-  adminNote: text("admin_note"),
+  adminNote: text("admin_note").default(null),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   processedAt: timestamp("processed_at"),
 });
@@ -109,10 +109,11 @@ export const conversationDeletions = pgTable("conversation_deletions", {
 });
 
 // Relations
-export const usersRelations = relations(users, ({ many }) => ({
+export const usersRelations = relations(users, ({ many }): Record<string, any> => ({
   gbairais: many(gbairais),
   interactions: many(interactions),
   messages: many(messages),
+  notifications: many(notifications),
   following: many(follows, {
     relationName: 'following',
   }),
@@ -121,7 +122,7 @@ export const usersRelations = relations(users, ({ many }) => ({
   }),
 }));
 
-export const gbairaisRelations = relations(gbairais, ({ one, many }) => ({
+export const gbairaisRelations = relations(gbairais, ({ one, many }): Record<string, any> => ({
   user: one(users, {
     fields: [gbairais.userId],
     references: [users.id],
@@ -129,7 +130,7 @@ export const gbairaisRelations = relations(gbairais, ({ one, many }) => ({
   interactions: many(interactions),
 }));
 
-export const interactionsRelations = relations(interactions, ({ one, many }) => ({
+export const interactionsRelations = relations(interactions, ({ one, many }): Record<string, any> => ({
   user: one(users, {
     fields: [interactions.userId],
     references: [users.id],

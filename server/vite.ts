@@ -70,9 +70,9 @@ export async function setupVite(app: Express, server: Server) {
 export function serveStatic(app: Express) {
   try {
     // Essayer plusieurs chemins possibles
-    const publicPath = path.resolve(__dirname, "public");
-    const clientDistPath = path.resolve(__dirname, "..", "client", "dist");
-    const distPath = path.resolve(__dirname, "..", "dist");
+    const publicPath = path.resolve(import.meta.dirname, "public");
+    const clientDistPath = path.resolve(import.meta.dirname, "..", "client", "dist");
+    const distPath = path.resolve(import.meta.dirname, "..", "dist");
 
     console.log(`🔍 Checking paths:`);
     console.log(`   - publicPath: ${publicPath} (exists: ${fs.existsSync(publicPath)})`);
